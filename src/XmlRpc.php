@@ -26,11 +26,11 @@
 
 namespace PhpXmlRpc\Polyfill\XmlRpc;
 
-use PhpXmlrpc\Encoder;
-use PhpXmlrpc\Request;
-use PhpXmlrpc\Response;
-use PhpXmlrpc\Server;
-use PhpXmlrpc\Value;
+use PhpXmlRpc\Encoder;
+use PhpXmlRpc\Request;
+use PhpXmlRpc\Response;
+use PhpXmlRpc\Server;
+use PhpXmlRpc\Value;
 
 final class XmlRpc
 {
@@ -45,7 +45,7 @@ final class XmlRpc
      */
     public static function xmlrpc_decode($xml, $encoding = "iso-8859-1")
     {
-        $encoder = new PhpXmlRpc\Encoder();
+        $encoder = new Encoder();
         // strip out unnecessary xml in case we're deserializing a single param.
         // in case of a complete response, we do not have to strip anything
         // please note that the test below has LARGE space for improvement (eg it might trip on xml comments...)
@@ -77,7 +77,7 @@ final class XmlRpc
      */
     public static function xmlrpc_decode_request($xml, &$method, $encoding = null)
     {
-        $encoder = new PhpXmlRpc\Encoder();
+        $encoder = new Encoder();
         $val = $encoder->decodeXml($xml);
         if (!$val) {
             return null; // instead of false
@@ -107,9 +107,9 @@ final class XmlRpc
      */
     public static function xmlrpc_encode($val)
     {
-        $encoder = new PhpXmlRpc\Encoder();
+        $encoder = new Encoder();
         $val = $encoder->encode($val, array('extension_api'));
-        return "<?xml version=\"1.0\" ?" . ">\n<params>\n<param>\n" . $val->serialize() . "</param>\n</params>";
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<params>\n<param>\n " . $val->serialize('UTF-8') . "</param>\n</params>";
     }
 
     /**
@@ -178,14 +178,14 @@ final class XmlRpc
     {
         switch (strtolower(gettype($value))) {
             case 'string':
-                return $GLOBALS['xmlrpcString'];
+                return Value::$xmlrpcString;
             case 'integer':
             case 'resource':
-                return $GLOBALS['xmlrpcInt'];
+                return Value::$xmlrpcInt;
             case 'double':
-                return $GLOBALS['xmlrpcDouble'];
+                return Value::$xmlrpcDouble;
             case 'boolean':
-                return $GLOBALS['xmlrpcBoolean'];
+                return Value::$xmlrpcBoolean;
             case 'array':
                 $i = 0;
                 $ok = true;
@@ -196,16 +196,16 @@ final class XmlRpc
                     } else
                         $i++;
 
-                return $ok ? $GLOBALS['xmlrpcArray'] : $GLOBALS['xmlrpcStruct'];
+                return $ok ? Value::$xmlrpcArray : Value::$xmlrpcStruct;
             case 'object':
                 if (is_a($value, 'xmlrpcval')) {
 /// @todo fixme
                     list($type, $value) = each($value->me);
                     return str_replace(array('i4', 'dateTime.iso8601'), array('int', 'datetime'), $type);
                 }
-                return $GLOBALS['xmlrpcStruct'];
+                return Value::$xmlrpcStruct;
             case 'null':
-                return $GLOBALS['xmlrpcBase64']; // go figure why...
+                return Value::$xmlrpcBase64; // go figure why...
         }
     }
 
@@ -276,7 +276,7 @@ final class XmlRpc
      */
     public static function xmlrpc_server_destroy($server)
     {
-        if (is_a($server, 'xmlrpc_server'))
+        if ($server instanceof Server)
             return 1;
         else
             return 0;
@@ -304,7 +304,7 @@ final class XmlRpc
      */
     public static function xmlrpc_server_register_method($server, $method_name, $function)
     {
-        if (is_a($server, 'xmlrpc_server')) {
+        if ($server instanceof Server) {
             $server->add_to_map($method_name, $function);
             return true;
         } else
@@ -332,7 +332,7 @@ final class XmlRpc
                     // add 3 object members to make it more compatible to user code
                     $val->scalar = $val->me['dateTime.iso8601'];
                     $val->xmlrpc_type = 'datetime';
-                    $val->timestamp = iso8601_decode($val->scalar);
+                    $val->timestamp = \PhpXmlRpc\Helper\Date::iso8601Decode($val->scalar);
                 } else {
                     return false;
                 }

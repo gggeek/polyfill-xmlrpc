@@ -129,5 +129,5 @@ if (!function_exists('xmlrpc_set_type')) {
      * @param string $type
      * @return bool
      */
-    function (&$value, $type) { return p\XmlRpc::xmlrpc_set_type($value, $type); }
+    function xmlrpc_set_type(&$value, $type) { return p\XmlRpc::xmlrpc_set_type($value, $type); }
 }

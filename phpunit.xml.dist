@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<phpunit colors="true" bootstrap="vendor/autoload.php">
+
+    <!-- code coverage reporting -->
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./</directory>
+            <exclude>
+                <directory>./tests</directory>
+                <directory>./vendor</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+
+    <testsuites>
+        <testsuite name="Polyfill-XMLRPC Test Suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>
