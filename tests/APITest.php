@@ -90,7 +90,7 @@ class ApiTest extends PolyfillTestCase
     }
 
     /**
-     * @dataProvider getEncodeValues
+     * @dataProvider getEncodeRequestValues
      */
     function testEncodeRequest($value)
     {
@@ -104,9 +104,11 @@ class ApiTest extends PolyfillTestCase
         $this->assertEquals($ok, $ok1, "xmlrpc_encode_request failed for ".var_export($value, true));
 
         $methodName = '';
+        $methodName1 = '';
         $ko = xmlrpc_decode_request($ok, $methodName);
-        $ko1 = p::xmlrpc_decode_request($ok1, $methodName);
-        $this->assertEquals($ko, $ko1, "xmlrpc_decode_request failed for ".var_export($ok, true));
+        $ko1 = p::xmlrpc_decode_request($ok1, $methodName1);
+        $this->assertEquals($ko, $ko1, "xmlrpc_decode_request return failed for ".var_export($ok, true));
+        $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
 
         //$ko = xmlrpc_decode_request('zzz'.$ok, $methodname);
         //echo  'DECODED BAD  : '; var_dump($ko);
@@ -120,7 +122,8 @@ class ApiTest extends PolyfillTestCase
         $methodName1 = '***';
         $ko = $this->normalizeXmlFormatting(xmlrpc_decode_request($ok, $methodName));
         $ko1 = $this->normalizeXmlFormatting(xmlrpc_decode_request($ok1, $methodName1));
-        $this->assertEquals($ko, $ko1, "xmlrpc_decode_request failed for ".var_export($value, true));
+        $this->assertEquals($ko, $ko1, "xmlrpc_decode_request return failed for ".var_export($value, true));
+        $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
 
         PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
         PhpXmlRpc::$xmlpc_double_precision = $defaultPrecision;
@@ -215,6 +218,26 @@ class ApiTest extends PolyfillTestCase
         return $vals;
     }
 
+    public function getEncodeRequestValues()
+    {
+        $vals = $this->getScalarValues();
+
+        $v1 = '20060707T12:00:00';
+        p::xmlrpc_set_type($v1, 'datetime');
+        $v2 = 'hello world';
+        p::xmlrpc_set_type($v2, 'base64');
+        $vals[] = array($v1);
+        $vals[] = array($v2);
+
+        $vals[] = array(array('hello' => true, 'hello', 'world')); // mixed - encode KO (2 members with null name) but decode will be fine!!!
+        $vals[] = array(array('methodname' => 'hello', 'params' => array())); // struct
+
+        // these values are though for the EPI library :-)
+        //$vals = array_merge($vals, $this->getIsFaultValues());
+
+        return $vals;
+    }
+
     /**
      * A set of values used in most tests
      * @todo add more values: Object, DateTime, function, Latin1 text, more nested arrays...
@@ -245,14 +268,32 @@ class ApiTest extends PolyfillTestCase
             array('Τὴ γλῶσσα μοῦ ἔδωσαν ἑλληνικὴ'), /// @todo replace with latin-1 stuff
             array(base64_encode('hello')), // string
             array(fopen(__FILE__, 'r')),
+
+            // arrays
             array(array()),
             array(array('a')),
             array(array(true, false, 0, 1, -1, 2.0, -2.1, '', ' 1 ', ' 2.1 ', 'hello', fopen(__FILE__, 'r'))),
-            array(array(array(1))),
+            array(array(array(array(1)))),
             array(array('hello' => 'world')), // struct
             array(array('2' => true, false)), // array - when decoded array keys will be reset
             array(array('hello' => true, 'world')), // mixed
             //new apitests() // CRASH!!!,
+
+            // objects
+            array((object)array()),
+            array((object)array('a')),
+            array((object)array('hello' => 'world')),
+            array(new \DateTime()),
+            array(new \DateTimeImmutable()),
+
+            // objects similar to 'set_type' ones
+            array((object)array('xmlrpc_type' => 'datetime', 'scalar' => '20060707T12:00:00', 'timestamp' => 1152273600)),
+            array((object)array('xmlrpc_type' => 'base64', 'scalar' => 'hello world')),
+            array((object)array('xmlrpc_type' => 'datetime')),
+            array((object)array('xmlrpc_type' => 'base64')),
+            array((object)array('xmlrpc_type' => 'whatever')),
+            array((object)array('xmlrpc_type' => 'datetime', 'scalar' => '20060707T12:00:00', 'timestamp' => 'not good')),
+            array((object)array('xmlrpc_type' => 'base64', 'scalar' => null)),
         );
 
         return $vals;

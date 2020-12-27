@@ -10,18 +10,21 @@
  * @license code licensed under the BSD License: see license.txt
  *
  * Known differences from the observed behaviour of the PHP extension:
- * - not all functions are implemented yet: some exist but do nothing
- * - xmlrpc_set_type will change the type of its argument from string to Object
- * - xmlrpc_server_create returns an object instead of a resource
+ * Won't fix:
  * - the native extension always encodes double values using 6 decimal digits, we do not. Eg:
- *   value 1.1 is encoded as <double>1.100000</double> vs. <double>1.1</double>
+ *   value 1.1 is encoded as <double>1.1</double> vs. <double>1.100000</double>
+ * - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request will be encoded as structs
+ *   (the extension generates an invalid xmlrpc request in this case)
+ * Possibly to fix:
+ * - xmlrpc_server_create() returns an object instead of a resource
+ *
+ * To fix:
+ * - not all functions are implemented yet: some exist but do nothing
  * - php arrays indexed with integer keys starting above zero or whose keys are
  *   not in a strict sequence will be converted into xmlrpc structs, not arrays
  * - php arrays indexed with mixed string/integer keys will preserve the integer
  *   keys in the generated structs
- * - base64 and datetime values are converted (by set_type(), decode(), decode_request())
- *   into slightly different php objects - but std object members are preserved
- * - a single NULL value passed to xmlrpc_encode_req(null, $val) will be decoded as '', not NULL
+ * - a single NULL value passed to xmlrpc_encode_request(null, $val) will be decoded as '', not NULL
  *   (the extension generates an invalid xmlrpc response in this case)
  *
  * @todo finish implementation of 3 missing functions
@@ -215,6 +218,15 @@ final class XmlRpc
 /// @todo fixme
                     list($type, $value) = each($value->me);
                     return str_replace(array('i4', 'dateTime.iso8601'), array('int', 'datetime'), $type);
+                } elseif ($value instanceof \stdClass && isset($value->xmlrpc_type)) {
+                    switch($value->xmlrpc_type) {
+                        case 'datetime':
+                        case 'base64':
+                            return $value->xmlrpc_type;
+                        default:
+                            return 'none';
+
+                    }
                 }
                 return Value::$xmlrpcStruct;
             case 'null':
