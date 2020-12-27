@@ -335,17 +335,20 @@ final class XmlRpc
     {
         if (is_string($val)) {
             if ($type == 'base64') {
-                $val = new Value($val, 'base64');
-                // add two object members to make it more compatible to user code
-                $val->scalar = $val->me['base64'];
-                $val->xmlrpc_type = 'base64';
+                $value = array(
+                    'scalar' => $val,
+                    'xmlrpc_type' => 'base64'
+                );
+                $val = (object)$value;
             } elseif ($type == 'datetime') {
-                if (preg_match('/([0-9]{8})T([0-9]{2}):([0-9]{2}):([0-9]{2})/', $val)) {
-                    $val = new Value($val, 'dateTime.iso8601');
+                if (preg_match('/([0-9]{4}[0-1][0-9][0-3][0-9])T([0-5][0-9]):([0-5][0-9]):([0-5][0-9])/', $val)) {
                     // add 3 object members to make it more compatible to user code
-                    $val->scalar = $val->me['dateTime.iso8601'];
-                    $val->xmlrpc_type = 'datetime';
-                    $val->timestamp = \PhpXmlRpc\Helper\Date::iso8601Decode($val->scalar);
+                    $value = array(
+                        'scalar' => $val,
+                        'xmlrpc_type' => 'datetime',
+                        'timestamp' => \PhpXmlRpc\Helper\Date::iso8601Decode($val)
+                    );
+                    $val = (object)$value;
                 } else {
                     return false;
                 }
