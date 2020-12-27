@@ -10,6 +10,11 @@
  * @license code licensed under the BSD License: see license.txt
  *
  * Known differences from the observed behaviour of the PHP extension:
+ * - not all functions are implemented yet: some exist but do nothing
+ * - xmlrpc_set_type will change the type of its argument from string to Object
+ * - xmlrpc_server_create returns an object instead of a resource
+ * - the native extension always encodes double values using 6 decimal digits, we do not. Eg:
+ *   value 1.1 is encoded as <double>1.100000</double> vs. <double>1.1</double>
  * - php arrays indexed with integer keys starting above zero or whose keys are
  *   not in a strict sequence will be converted into xmlrpc structs, not arrays
  * - php arrays indexed with mixed string/integer keys will preserve the integer
@@ -18,8 +23,6 @@
  *   into slightly different php objects - but std object members are preserved
  * - a single NULL value passed to xmlrpc_encode_req(null, $val) will be decoded as '', not NULL
  *   (the extension generates an invalid xmlrpc response in this case)
- * - the native extension truncates double values to 6 decimal digits, we do not
- * -  xmlrpc_server_create returns an object instead of a resource
  *
  * @todo finish implementation of 3 missing functions
  */
@@ -55,7 +58,7 @@ final class XmlRpc
         if (!$val) {
             return null; // instead of false
         }
-        if (is_a($val, 'xmlrpcresp')) {
+        if ($val instanceof Response) {
             if ($fc = $val->faultCode()) {
                 return array('faultCode' => $fc, 'faultString' => $val->faultString());
             } else {
@@ -74,6 +77,7 @@ final class XmlRpc
      *
      * @todo implement usage of $encoding
      * @todo test against upstream: is default encoding really null ?
+     * @bug fails for $xml === true, $xml === false, $xml === integer, $xml === float
      */
     public static function xmlrpc_decode_request($xml, &$method, $encoding = null)
     {
@@ -82,20 +86,22 @@ final class XmlRpc
         if (!$val) {
             return null; // instead of false
         }
-        if (is_a($val, 'xmlrpcresp')) {
+        if ($val instanceof Response) {
             if ($fc = $val->faultCode()) {
                 $out = array('faultCode' => $fc, 'faultString' => $val->faultString());
             } else {
                 $out = $encoder->decode($val->value(), array('extension_api'));
             }
-        } else if (is_a($val, 'xmlrpcmsg')) {
+        } else if ($val instanceof Request) {
             $method = $val->method();
             $out = array();
             $pn = $val->getNumParams();
             for ($i = 0; $i < $pn; $i++)
                 $out[] = $encoder->decode($val->getParam($i), array('extension_api'));
-        } else
-            return null; /// @todo test lib behaviour in this case
+        } else {
+            /// @todo copy lib behaviour in this case
+            return null;
+        }
 
         return $out;
     }
@@ -109,7 +115,7 @@ final class XmlRpc
     {
         $encoder = new Encoder();
         $val = $encoder->encode($val, array('extension_api'));
-        return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<params>\n<param>\n " . $val->serialize('UTF-8') . "</param>\n</params>";
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<params>\n<param>\n " . $val->serialize('US-ASCII') . "</param>\n</params>";
     }
 
     /**
@@ -125,6 +131,8 @@ final class XmlRpc
     public static function xmlrpc_encode_request($method, $params, $output_options = array())
     {
         $encoder = new Encoder();
+
+        $charsetEncoding = 'iso-8859-1';
 
         $output_options = array_merge($output_options, array('extension_api'));
 
@@ -157,14 +165,16 @@ final class XmlRpc
 
             // create request
             $req = new Request($method, $values);
-            $resp = $req->serialize();
+            $resp = $req->serialize($charsetEncoding);
+            /// @todo move this into the test suite
+            //$resp = preg_replace("/<\\?xml version=\"1.0\" encoding=\"$charsetEncoding\" \\?/", "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?", $resp);
         } else {
             // create response
             if (is_array($params) && xmlrpc_is_fault($params))
                 $req = new Response(0, (integer)$params['faultCode'], (string)$params['faultString']);
             else
                 $req = new Response($encoder->encode($params, $output_options));
-            $resp = "<?xml version=\"1.0\"?" . ">\n" . $req->serialize();
+            $resp = "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?" . ">\n" . $req->serialize($charsetEncoding);
         }
         return $resp;
     }
@@ -173,6 +183,9 @@ final class XmlRpc
      * Given a php value, return its corresponding xmlrpc type
      * @param mixed $value
      * @return string
+     *
+     * @bug fails compatibility for array('2' => true, false)
+     * @bug fails compatibility for array(true, 'world')
      */
     public static function xmlrpc_get_type($value)
     {
@@ -198,7 +211,7 @@ final class XmlRpc
 
                 return $ok ? Value::$xmlrpcArray : Value::$xmlrpcStruct;
             case 'object':
-                if (is_a($value, 'xmlrpcval')) {
+                if ($value instanceof Value) {
 /// @todo fixme
                     list($type, $value) = each($value->me);
                     return str_replace(array('i4', 'dateTime.iso8601'), array('int', 'datetime'), $type);

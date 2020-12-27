@@ -6,7 +6,7 @@ Originally bundled as part of the [phpxmlrpc/extras](https://github.com/gggeek/p
 
 Known differences from the original extension
 ---------------------------------------------
-See at the top of file [XmlRpc.php](src/XmlRpc.php).
+See comments at the top and in the body of file [XmlRpc.php](src/XmlRpc.php).
 
 License
 -------
