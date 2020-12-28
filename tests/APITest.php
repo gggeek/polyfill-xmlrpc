@@ -69,7 +69,7 @@ class ApiTest extends PolyfillTestCase
     function testEncode($value)
     {
         $defaultPrecision = PhpXmlRpc::$xmlpc_double_precision;
-        PhpXmlRpc::$xmlpc_double_precision = 6;
+        PhpXmlRpc::$xmlpc_double_precision = 13;
         $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
         PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1';
 
@@ -97,7 +97,7 @@ class ApiTest extends PolyfillTestCase
     function testEncodeRequest($value)
     {
         $defaultPrecision = PhpXmlRpc::$xmlpc_double_precision;
-        PhpXmlRpc::$xmlpc_double_precision = 6;
+        PhpXmlRpc::$xmlpc_double_precision = 13;
         $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
         PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1';
 
@@ -267,7 +267,7 @@ class ApiTest extends PolyfillTestCase
             array(2.1),
             array(-2.1),
             array(2.123456789012345678901234567890123456789),
-            array(-2.12345678912345678901234567890123456789),
+            array(-2.123456789012345678901234567890123456789),
 // breaks testEncodeRequest
 //            array(null), // base 64 type???, encoded as empty string
             array(''),

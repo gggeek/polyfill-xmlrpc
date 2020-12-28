@@ -13,8 +13,9 @@
  * Won't fix:
  * - the xml produced is not the same byte-by-byte as the one produced by the native extension,
  *   eg. whitespace and element indentation do differ
- * - the native extension always encodes double values using 6 decimal digits, we do not. Eg:
- *   value 1.1 is encoded as <double>1.1</double> instead of <double>1.100000</double>
+ * - the native extension always encodes double values using 13 decimal digits (or 6, depending on version), and pads
+ *   with zeros. We use 13 decimal digits and do not pad. Eg:
+ *   value 1.1 is encoded as <double>1.1</double> instead of <double>1.1000000000000</double>
  * - when encoding base64 values, we don't add encoded newline characters (&#10;)
  * - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request() will be encoded
  *   as structs (the extension generates an invalid xmlrpc request in this case)
