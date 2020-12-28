@@ -16,20 +16,21 @@
  * - the native extension always encodes double values using 6 decimal digits, we do not. Eg:
  *   value 1.1 is encoded as <double>1.1</double> instead of <double>1.100000</double>
  * - when encoding base64 values, we don't add encoded newline characters (&#10;)
- * - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request will be encoded as structs
- *   (the extension generates an invalid xmlrpc request in this case)
+ * - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request() will be encoded
+ *   as structs (the extension generates an invalid xmlrpc request in this case)
  * Possibly to fix:
  * - xmlrpc_server_create() returns an object instead of a resource
  * - a single NULL value passed to xmlrpc_encode_request(null, $val) will be decoded as '', not NULL
  *   (the extension generates an invalid xmlrpc response in this case)
- * Definitely to fix:
- * - not all functions are implemented yet: some exist but do nothing
- * - php arrays indexed with integer keys starting above zero or whose keys are
- *   not in a strict sequence will be converted into xmlrpc structs, not arrays
+ * - $output_options argument does nothing in xmlrpc_encode_request
  * - php arrays indexed with mixed string/integer keys will preserve the integer
  *   keys in the generated structs
- *
- * @todo finish implementation of 3 missing functions
+ * Definitely to fix:
+ * - three functions are not implemented yet - they exist but do nothing: xmlrpc_parse_method_descriptions,
+ *   xmlrpc_server_add_introspection_data and xmlrpc_server_register_introspection_callback
+ * - the $encoding argument does nothing in xmlrpc_decode() and xmlrpc_decode_request()
+ * - php arrays indexed with integer keys starting above zero or whose keys are
+ *   not in a strict sequence will be converted into xmlrpc structs, not arrays
  */
 
 namespace PhpXmlRpc\Polyfill\XmlRpc;
@@ -118,7 +119,7 @@ final class XmlRpc
      * Given a PHP val, convert it to xmlrpc code (wrapped up in either params/param elements or a fault element).
      * @param mixed $val
      * @return string
-     * @todo test what happens with faultCode === 0|''|null
+     * @todo test what happens with arrays with faultCode === 0|''|null
      */
     public static function xmlrpc_encode($val)
     {
@@ -133,7 +134,7 @@ final class XmlRpc
 
     /**
      * Given a method name and array of php values, create an xmlrpc request out
-     * of them. If method name === null, will create an xmlrpc response
+     * of them. If method name === null, create an xmlrpc response instead
      * @param string $method
      * @param array $params
      * @param array $output_options options array

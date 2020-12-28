@@ -77,6 +77,8 @@ class ApiTest extends PolyfillTestCase
         $ko1 = p::xmlrpc_encode($value);
         $this->assertEquals($this->normalizeXmlFormatting($ko), $this->normalizeXmlFormatting($ko1), "xmlrpc_encode failed for ".var_export($value, true));
 
+        /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
+
         $ok = xmlrpc_decode($ko);
         $ok1 = p::xmlrpc_decode($ko1);
         $this->assertEquals($ok, $ok1, "xmlrpc_decode failed for ".var_export($ko1, true));
@@ -99,9 +101,13 @@ class ApiTest extends PolyfillTestCase
         $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
         PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1';
 
+        /// @todo add more encoding tests with different method names: empty string, invalid charset, non-string
+
         $ok = xmlrpc_encode_request('hello', $value);
         $ok1 = p::xmlrpc_encode_request('hello', $value);
         $this->assertEquals($this->normalizeXmlFormatting($ok), $this->normalizeXmlFormatting($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
+
+        /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
 
         $methodName = '';
         $methodName1 = '';
@@ -116,9 +122,6 @@ class ApiTest extends PolyfillTestCase
         $ko3 = p::xmlrpc_decode_request($ok, $methodName1);
         $this->assertEquals($ko2, $ko3, "xmlrpc_decode_request return failed for ".var_export($ok, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
-
-        //$ko = xmlrpc_decode_request('zzz'.$ok, $methodname);
-        //echo  'DECODED BAD  : '; var_dump($ko);
 
         // methodresponse generated
 
