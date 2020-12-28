@@ -1,11 +1,11 @@
 <?php
 /**
- * @todo test xmlrpc_encode_request(NULL, array())
- *
  * @author Gaetano Giunta
  * @copyright (c) 2020 G. Giunta
  * @license code licensed under the BSD License: see license.txt
  */
+
+include_once dirname(__DIR__) . '/bootstrap.php';
 
 include_once __DIR__ . '/PolyfillTestCase.php';
 

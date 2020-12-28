@@ -2,16 +2,23 @@
     "name": "phpxmlrpc/polyfill-xmlrpc",
     "description": "A pure-php reimplementation of the API exposed by the native XML-RPC extension",
     "license": "BSD-3-Clause",
-    "keywords": [ "webservices", "xmlrpc", "php", "extension", "polyfill" ],
-    "require":
-    {
+    "keywords": [
+        "webservices",
+        "xmlrpc",
+        "php",
+        "extension",
+        "polyfill"
+    ],
+    "require": {
         "php": "^5.3.0 || ^7.0 || ^8.0",
-        "phpxmlrpc/phpxmlrpc": "^4.5.0"
+        "phpxmlrpc/phpxmlrpc": "dev-master as 4.5.0-dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^5.0 || ^8.5.12",
-        "yoast/phpunit-polyfills": "*",
-        "ext-xmlrpc": "*"
+        "yoast/phpunit-polyfills": "*"
+    },
+    "suggest": {
+        "ext-xmlrpc": "Recommended for running the test suite. We can not declare it in require-dev because it is missing in php 8"
     },
     "autoload": {
         "psr-4": {
