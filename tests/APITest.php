@@ -159,8 +159,8 @@ class ApiTest extends PolyfillTestCase
             array(
                 '/^<\\?xml +version="1\\.0" +encoding="([^"]*)" \\?/',
                 '!<string></string>!',
-                '!<double>(-)?([0-9]+)\\.0{6}</double>!',
-                '!<double>(-)?([0-9]+)\\.([1-9]+)0{1,5}</double>!',
+                '!<double>(-)?([0-9]+)\\.0{6,40}</double>!',
+                '!<double>(-)?([0-9]+)\\.([1-9]+)0{1,39}</double>!',
                 // nb: EPI actually inserts one &#10; entity every 80 chars, but we don't test (yet) long base64 strings...
                 '!<base64>([A-Za-z0-9=/+]+)&#10;</base64>!',
                 '/^ +/m',
@@ -266,8 +266,8 @@ class ApiTest extends PolyfillTestCase
             array(2.0),
             array(2.1),
             array(-2.1),
-            array(2.123456789),
-            array(-2.123456789),
+            array(2.123456789012345678901234567890123456789),
+            array(-2.12345678912345678901234567890123456789),
 // breaks testEncodeRequest
 //            array(null), // base 64 type???, encoded as empty string
             array(''),
