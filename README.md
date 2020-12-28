@@ -16,5 +16,5 @@ Use of this software is subject to the terms in the [license.txt](license.txt) f
 [![Latest Stable Version](https://poser.pugx.org/phpxmlrpc/polyfill-xmlrpc/v/stable)](https://packagist.org/packages/phpxmlrpc/polyfill-xmlrpc)
 [![Total Downloads](https://poser.pugx.org/phpxmlrpc/polyfill-xmlrpc/downloads)](https://packagist.org/packages/phpxmlrpc/polyfill-xmlrpc)
 
-[![Build Status](https://travis-ci.com/gggeek/polyfill-xmlrpc.svg)](https://travis-ci.org/gggeek/polyfill-xmlrpc)
+[![Build Status](https://travis-ci.com/gggeek/polyfill-xmlrpc.svg)](https://travis-ci.com/gggeek/polyfill-xmlrpc)
 [![Code Coverage](https://scrutinizer-ci.com/g/gggeek/polyfill-xmlrpc/badges/coverage.png)](https://scrutinizer-ci.com/g/gggeek/polyfill-xmlrpc)
