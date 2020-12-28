@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Try to implement the same API of the PHP built-in XMLRPC extension, so that
+ * (Try to) implement the same API of the PHP built-in XMLRPC extension, so that
  * projects relying on it can be ported to php installs where the extension is
  * missing.
  *
@@ -11,21 +11,23 @@
  *
  * Known differences from the observed behaviour of the PHP extension:
  * Won't fix:
+ * - the xml produced is not the same byte-by-byte as the one produced by the native extension,
+ *   eg. whitespace and element indentation do differ
  * - the native extension always encodes double values using 6 decimal digits, we do not. Eg:
- *   value 1.1 is encoded as <double>1.1</double> vs. <double>1.100000</double>
+ *   value 1.1 is encoded as <double>1.1</double> instead of <double>1.100000</double>
+ * - when encoding base64 values, we don't add encoded newline characters (&#10;)
  * - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request will be encoded as structs
  *   (the extension generates an invalid xmlrpc request in this case)
  * Possibly to fix:
  * - xmlrpc_server_create() returns an object instead of a resource
- *
- * To fix:
+ * - a single NULL value passed to xmlrpc_encode_request(null, $val) will be decoded as '', not NULL
+ *   (the extension generates an invalid xmlrpc response in this case)
+ * Definitely to fix:
  * - not all functions are implemented yet: some exist but do nothing
  * - php arrays indexed with integer keys starting above zero or whose keys are
  *   not in a strict sequence will be converted into xmlrpc structs, not arrays
  * - php arrays indexed with mixed string/integer keys will preserve the integer
  *   keys in the generated structs
- * - a single NULL value passed to xmlrpc_encode_request(null, $val) will be decoded as '', not NULL
- *   (the extension generates an invalid xmlrpc response in this case)
  *
  * @todo finish implementation of 3 missing functions
  */
@@ -52,23 +54,26 @@ final class XmlRpc
     public static function xmlrpc_decode($xml, $encoding = "iso-8859-1")
     {
         $encoder = new Encoder();
-        // strip out unnecessary xml in case we're deserializing a single param.
-        // in case of a complete response, we do not have to strip anything
-        // please note that the test below has LARGE space for improvement (eg it might trip on xml comments...)
-        if (strpos($xml, '<methodResponse>') === false)
+        if (strpos($xml, '<methodResponse>') === false) {
+            // strip out unnecessary xml in case we're deserializing a single param.
+            // in case of a complete response, we do not have to strip anything
+            // please note that the test below has LARGE space for improvement (eg. it might trip on xml comments...)
             $xml = preg_replace(array('!\s*<params>\s*<param>\s*!', '!\s*</param>\s*</params>\s*$!'), array('', ''), $xml);
+        }
         $val = $encoder->decodeXml($xml);
         if (!$val) {
             return null; // instead of false
         }
         if ($val instanceof Response) {
             if ($fc = $val->faultCode()) {
-                return array('faultCode' => $fc, 'faultString' => $val->faultString());
+                $fs = $val->faultString();
+                return array('faultCode' => $fc, 'faultString' => $fs);
             } else {
                 return $encoder->decode($val->value(), array('extension_api'));
             }
-        } else
+        } else {
             return $encoder->decode($val, array('extension_api'));
+        }
     }
 
     /**
@@ -110,15 +115,20 @@ final class XmlRpc
     }
 
     /**
-     * Given a PHP val, convert it to xmlrpc code (wrapped up in params/param elements).
+     * Given a PHP val, convert it to xmlrpc code (wrapped up in either params/param elements or a fault element).
      * @param mixed $val
      * @return string
+     * @todo test what happens with faultCode === 0|''|null
      */
     public static function xmlrpc_encode($val)
     {
         $encoder = new Encoder();
-        $val = $encoder->encode($val, array('extension_api'));
-        return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<params>\n<param>\n " . $val->serialize('US-ASCII') . "</param>\n</params>";
+        $eval = $encoder->encode($val, array('extension_api'));
+        if (is_array($val) && isset($val['faultCode'])) {
+            return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<fault>\n " . $eval->serialize('US-ASCII') . "</fault>";
+        } else {
+            return "<?xml version=\"1.0\" encoding=\"utf-8\"?" . ">\n<params>\n<param>\n " . $eval->serialize('US-ASCII') . "</param>\n</params>";
+        }
     }
 
     /**
@@ -148,6 +158,7 @@ final class XmlRpc
                     $params = array($params);
                 }
             } else {
+/// @todo fix corner cases
                 // if given a 'hash' array, encode it as a single param
                 $i = 0;
                 $ok = true;
@@ -169,8 +180,6 @@ final class XmlRpc
             // create request
             $req = new Request($method, $values);
             $resp = $req->serialize($charsetEncoding);
-            /// @todo move this into the test suite
-            //$resp = preg_replace("/<\\?xml version=\"1.0\" encoding=\"$charsetEncoding\" \\?/", "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?", $resp);
         } else {
             // create response
             if (is_array($params) && xmlrpc_is_fault($params))
