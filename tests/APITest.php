@@ -266,8 +266,8 @@ class ApiTest extends PolyfillTestCase
             array(2.0),
             array(2.1),
             array(-2.1),
-            array(2.123456789012345678901234567890123456789),
-            array(-2.123456789012345678901234567890123456789),
+            array(2.0123456789012345678901234567890123456789),
+            array(-2.0123456789012345678901234567890123456789),
 // breaks testEncodeRequest
 //            array(null), // base 64 type???, encoded as empty string
             array(''),
