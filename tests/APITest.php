@@ -15,8 +15,9 @@ include_once dirname(__DIR__) . '/bootstrap.php';
 include_once __DIR__ . '/PolyfillTestCase.php';
 
 use PhpXmlRpc\Polyfill\XmlRpc\XmlRpc as p;
+use Yoast\PHPUnitPolyfills\TestCases\TestCase;
 
-class ApiTest extends PolyfillTestCase
+class ApiTest extends TestCase
 {
     /**
      * @beforeClass

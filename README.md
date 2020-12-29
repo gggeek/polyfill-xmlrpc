@@ -27,7 +27,24 @@ The recommended way to install this library is via usage of Composer.
 Running tests
 -------------
 
-(to be documented...)
+The recommended way to run the library test suite is via the provided Docker containers.
+A handy shell script is available that simplifies usage of Docker.
+
+The full sequence of operations is:
+
+    ./tests/ci/vm.sh build
+    ./tests/ci/vm.sh start
+    ./tests/ci/vm.sh runtests
+    ./tests/ci/vm.sh stop
+
+    # and, once you have finished all testing related work:
+    ./tests/ci/vm.sh cleanup
+
+By default tests are run using php 7.0 in a Container based on Ubuntu 16 Xenial.
+You can change the version of PHP and Ubuntu in use by setting the environment variables PHP_VERSION and UBUNTU_VERSION
+before building the Container.
+
+To generate the code-coverage report, run `./tests/ci/vm.sh runcoverage`
 
 License
 -------
