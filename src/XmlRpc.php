@@ -59,8 +59,8 @@ final class XmlRpc
      * @return mixed
      *
      * @todo implement usage of $encoding
-     * @todo test against upstream: is default encoding really latin-1 ?
-     */
+     *       - test against upstream: does $encoding apply to the received data, or to the decoded data?
+     *       - test against upstream: is default encoding really latin-1 ? check with C1 control chars entities and CP-1252 chars entities     */
     public static function xmlrpc_decode($xml, $encoding = "iso-8859-1")
     {
         $encoder = new Encoder();
@@ -70,20 +70,30 @@ final class XmlRpc
             // please note that the test below has LARGE space for improvement (eg. it might trip on xml comments...)
             $xml = preg_replace(array('!\s*<params>\s*<param>\s*!', '!\s*</param>\s*</params>\s*$!'), array('', ''), $xml);
         }
+
+        $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
+        PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1'; //strtoupper($encoding);
+
         $val = $encoder->decodeXml($xml);
+
         if (!$val) {
-            return null; // instead of false
-        }
-        if ($val instanceof Response) {
-            if ($fc = $val->faultCode()) {
-                $fs = $val->faultString();
-                return array('faultCode' => $fc, 'faultString' => $fs);
-            } else {
-                return $encoder->decode($val->value(), array('extension_api'));
-            }
+            $out = null; // instead of false
         } else {
-            return $encoder->decode($val, array('extension_api'));
+            if ($val instanceof Response) {
+                if ($fc = $val->faultCode()) {
+                    $fs = $val->faultString();
+                    $out = array('faultCode' => $fc, 'faultString' => $fs);
+                } else {
+                    $out = $encoder->decode($val->value(), array('extension_api'));
+                }
+            } else {
+                $out = $encoder->decode($val, array('extension_api'));
+            }
         }
+
+        PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
+
+        return $out;
     }
 
     /**
@@ -94,32 +104,40 @@ final class XmlRpc
      * @return mixed
      *
      * @todo implement usage of $encoding
-     * @todo test against upstream: is default encoding really null ?
+     *       - test against upstream: does $encoding apply to the received data, or to the decoded data?
+     *       - test against upstream: is default encoding really latin-1 ? check with C1 control chars entities and CP-1252 chars entities
      * @bug fails for $xml === true, $xml === false, $xml === integer, $xml === float
      */
     public static function xmlrpc_decode_request($xml, &$method, $encoding = null)
     {
         $encoder = new Encoder();
+
+        $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
+        PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1'; //strtoupper($encoding);
+
         $val = $encoder->decodeXml($xml);
         if (!$val) {
-            return null; // instead of false
-        }
-        if ($val instanceof Response) {
-            if ($fc = $val->faultCode()) {
-                $out = array('faultCode' => $fc, 'faultString' => $val->faultString());
-            } else {
-                $out = $encoder->decode($val->value(), array('extension_api'));
-            }
-        } else if ($val instanceof Request) {
-            $method = $val->method();
-            $out = array();
-            $pn = $val->getNumParams();
-            for ($i = 0; $i < $pn; $i++)
-                $out[] = $encoder->decode($val->getParam($i), array('extension_api'));
+            $out = null; // instead of false
         } else {
-            /// @todo copy lib behaviour in this case
-            return null;
+            if ($val instanceof Response) {
+                if ($fc = $val->faultCode()) {
+                    $out = array('faultCode' => $fc, 'faultString' => $val->faultString());
+                } else {
+                    $out = $encoder->decode($val->value(), array('extension_api'));
+                }
+            } else if ($val instanceof Request) {
+                $method = $val->method();
+                $out = array();
+                $pn = $val->getNumParams();
+                for ($i = 0; $i < $pn; $i++)
+                    $out[] = $encoder->decode($val->getParam($i), array('extension_api'));
+            } else {
+                /// @todo copy lib behaviour in this case
+                $out = null;
+            }
         }
+
+        PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
 
         return $out;
     }
@@ -207,20 +225,20 @@ final class XmlRpc
 
             // create request
             $req = new Request($method, $values);
-            $resp = $req->serialize($charsetEncoding);
+            $out = preg_replace('!^<\\?xml version="1\\.0" encoding="US-ASCII" \\?>!', "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?>", $req->serialize('US-ASCII'));
         } else {
             // create response
             if (is_array($params) && self::xmlrpc_is_fault($params))
-                $req = new Response(0, (integer)$params['faultCode'], (string)$params['faultString']);
+                $resp = new Response(0, (integer)$params['faultCode'], (string)$params['faultString']);
             else
-                $req = new Response($encoder->encode($params, $output_options));
-            $resp = "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?" . ">\n" . $req->serialize($charsetEncoding);
+                $resp = new Response($encoder->encode($params, $output_options));
+            $out = "<?xml version=\"1.0\" encoding=\"$charsetEncoding\"?" . ">\n" . $resp->serialize('US-ASCII');
         }
 
         PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
         PhpXmlRpc::$xmlpc_double_precision = $defaultPrecision;
 
-        return $resp;
+        return $out;
     }
 
     /**
