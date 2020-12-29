@@ -46,6 +46,12 @@ before building the Container.
 
 To generate the code-coverage report, run `./tests/ci/vm.sh runcoverage`
 
+FAQ
+---
+
+Q: is it possible to specify the precision used to serialize Double values?
+A: yes, by setting a positive integer value to `\PhpXmlRpc\Polyfill\XmlRpc\XmlRpc::$xmlpc_double_precision`
+
 License
 -------
 Use of this software is subject to the terms in the [license.txt](license.txt) file
