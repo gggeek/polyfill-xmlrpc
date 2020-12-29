@@ -6,7 +6,28 @@ Originally bundled as part of the [phpxmlrpc/extras](https://github.com/gggeek/p
 
 Known differences from the original extension
 ---------------------------------------------
-See comments at the top and in the body of file [XmlRpc.php](src/XmlRpc.php).
+
+We strive to reproduce the same behaviour as the XML-RPC extension to the best "reasonable" extent.
+
+This means that the following are _not_ goals of this package:
+
+- being able to produce the same xml streams as the native extension, where "same" means byte-by-byte identical.
+  Eg. whitespace and element indentation in the produced xml strings do differ
+
+- reproducing behaviour of the native extension which is clearly buggy
+  Eg. the native extension will produce invalid xmlrpc requests when specific values are passed to an `xmlrpc_encode_request` call
+
+For a detailed list of known differences, see comments at the top of file [XmlRpc.php](src/XmlRpc.php).
+
+Installation and usage
+----------------------
+
+The recommended way to install this library is via usage of Composer.
+
+Running tests
+-------------
+
+(to be documented...)
 
 License
 -------

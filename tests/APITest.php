@@ -5,15 +5,34 @@
  * @license code licensed under the BSD License: see license.txt
  */
 
+/**
+ * NB: the testsuite is designed to be run with the native xmlrpc extension enabled.
+ * It will _not_ fail if the extension is disabled, but it will of course not be validating API correspondence - just
+ * that the API still works.
+ */
 include_once dirname(__DIR__) . '/bootstrap.php';
 
 include_once __DIR__ . '/PolyfillTestCase.php';
 
-use PhpXmlRpc\PhpXmlRpc;
 use PhpXmlRpc\Polyfill\XmlRpc\XmlRpc as p;
 
 class ApiTest extends PolyfillTestCase
 {
+    /**
+     * @beforeClass
+     */
+    public static function setEnvUp()
+    {
+        // Adjust the precision desired for encoding doubles to be the one of the native xmlrpc lib.
+        // This is needed because on some php installs the native precision has been found to be 13, on others 6...
+        if (preg_match('/>(1\.1+)</', xmlrpc_encode(1.1111111111111111111111111111111111111111), $matches)) {
+            p::$xmlpc_double_precision = strlen($matches[1]) - 2;
+        }
+
+        if (!extension_loaded('xmlrpc')) {
+            echo "WARNING: xmlrpc extension is not loaded. Tests are less meaningful!\n";
+        }
+    }
     /**
      * @dataProvider getGetTypeValues
      */
@@ -26,6 +45,7 @@ class ApiTest extends PolyfillTestCase
 
     /**
      * @dataProvider getSetTypeValues
+     * @todo test round-trip conversion, ie. set_type, encode, decode, check type, encode again
      */
     function testSetType($value)
     {
@@ -68,14 +88,9 @@ class ApiTest extends PolyfillTestCase
      */
     function testEncode($value)
     {
-        $defaultPrecision = PhpXmlRpc::$xmlpc_double_precision;
-        PhpXmlRpc::$xmlpc_double_precision = 13;
-        $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
-        PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1';
-
         $ko = xmlrpc_encode($value);
         $ko1 = p::xmlrpc_encode($value);
-        $this->assertEquals($this->normalizeXmlFormatting($ko), $this->normalizeXmlFormatting($ko1), "xmlrpc_encode failed for ".var_export($value, true));
+        $this->assertEquals($this->canonicalizeXML($ko), $this->canonicalizeXML($ko1), "xmlrpc_encode failed for ".var_export($value, true));
 
         /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
 
@@ -87,8 +102,7 @@ class ApiTest extends PolyfillTestCase
         $ok3 = p::xmlrpc_decode($ko);
         $this->assertEquals($ok3, $ok2, "xmlrpc_decode failed for ".var_export($ko, true));
 
-        PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
-        PhpXmlRpc::$xmlpc_double_precision = $defaultPrecision;
+        /// @todo test that the decoded value is the same as the original one - at least for common cases
     }
 
     /**
@@ -96,16 +110,11 @@ class ApiTest extends PolyfillTestCase
      */
     function testEncodeRequest($value)
     {
-        $defaultPrecision = PhpXmlRpc::$xmlpc_double_precision;
-        PhpXmlRpc::$xmlpc_double_precision = 13;
-        $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
-        PhpXmlRpc::$xmlrpc_internalencoding = 'ISO-8859-1';
-
         /// @todo add more encoding tests with different method names: empty string, invalid charset, non-string
 
         $ok = xmlrpc_encode_request('hello', $value);
         $ok1 = p::xmlrpc_encode_request('hello', $value);
-        $this->assertEquals($this->normalizeXmlFormatting($ok), $this->normalizeXmlFormatting($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
+        $this->assertEquals($this->canonicalizeXML($ok), $this->canonicalizeXML($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
 
         /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
 
@@ -122,12 +131,20 @@ class ApiTest extends PolyfillTestCase
         $ko3 = p::xmlrpc_decode_request($ok, $methodName1);
         $this->assertEquals($ko2, $ko3, "xmlrpc_decode_request return failed for ".var_export($ok, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
+    }
 
+    /**
+     * @dataProvider getEncodeRequestValues
+     */
+    function testEncodeResponse($value)
+    {
         // methodresponse generated
 
         $ok = xmlrpc_encode_request(null, $value);
         $ok1 = p::xmlrpc_encode_request(null, $value);
-        $this->assertEquals($this->normalizeXmlFormatting($ok), $this->normalizeXmlFormatting($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
+        $this->assertEquals($this->canonicalizeXML($ok), $this->canonicalizeXML($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
+
+        /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
 
         $methodName = '***';
         $methodName1 = '***';
@@ -142,54 +159,62 @@ class ApiTest extends PolyfillTestCase
         $ko3 = p::xmlrpc_decode_request($ok, $methodName1);
         $this->assertEquals($ko2, $ko3, "xmlrpc_decode_request return failed for ".var_export($ok, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
-
-        PhpXmlRpc::$xmlrpc_internalencoding = $defaultEncoding;
-        PhpXmlRpc::$xmlpc_double_precision = $defaultPrecision;
     }
 
     /**
-     * "Normalize" xml so that we can make tests pass, which are based on string comparison.
-     * NB: normalizes 'double' values as well, as we consider the difference for their serialization ok
+     * "Canonicalize" xml so that we can make tests pass, which are based on string comparison.
+     * NB: normalizes 'double', 'string' and 'base64' values as well, as we consider the difference for their serialization ok
+     * @see https://en.wikipedia.org/wiki/Canonical_XML for generic xml canonicalization
      * @param string $text
      * @return string
      */
-    protected function normalizeXmlFormatting($text)
+    protected function canonicalizeXML($text)
     {
         return preg_replace(
             array(
-                '/^<\\?xml +version="1\\.0" +encoding="([^"]*)" \\?/',
-                '!<string></string>!',
+                '!^<\\?xml +version *= *"1\\.0" +encoding *= *"([^"]*)" *\\?>!',
+                '!<params/>!',
+                '!<data/>!',
+                '!<string/>!',
+                '!<string>(.*)&quot;(.*)</string>!',
+                '!<string>(.*)&lt;(.*)</string>!',
+                '!<string>(.*)&gt;(.*)</string>!',
+                '!<string>(.*)&amp;(.*)</string>!',
+                '!<string>(.*)&apos;(.*)</string>!',
                 '!<double>(-)?([0-9]+)\\.0{6,40}</double>!',
                 '!<double>(-)?([0-9]+)\\.([1-9]+)0{1,39}</double>!',
                 // nb: EPI actually inserts one &#10; entity every 80 chars, but we don't test (yet) long base64 strings...
                 '!<base64>([A-Za-z0-9=/+]+)&#10;</base64>!',
-                '/^ +/m',
-                '/\\n/s',
-                '#<params></params>#',
-                '#<data></data>#',
+                '!^ +!m',
+                '!\\n!s',
             ),
             array(
-                '<?xml version="1.0" encoding="$1"?',
-                '<string/>',
+                '<?xml version="1.0" encoding="$1"?>',
+                '<params></params>',
+                '<data></data>',
+                '<string></string>',
+                '<string>$1&#34;$2</string>',
+                '<string>$1&#60;$2</string>',
+                '<string>$1&#62;$2</string>',
+                '<string>$1&#38;$2</string>',
+                '<string>$1\'$2</string>',
                 '<double>$1$2</double>',
                 '<double>$1$2.$3</double>',
                 '<base64>$1</base64>',
                 '',
                 '',
-                '<params/>',
-                '<data/>',
             ),
             $text);
     }
 
     public function getGetTypeValues()
     {
-        return $this->getScalarValues();
+        return $this->getCommonValues();
     }
 
     public function getSetTypeValues()
     {
-        return $this->getScalarValues();
+        return $this->getCommonValues();
     }
 
     /// @todo add more cases with wrong type for faultCode & faultString: null, float, object, resource
@@ -233,7 +258,7 @@ class ApiTest extends PolyfillTestCase
 
     public function getEncodeRequestValues()
     {
-        $vals = $this->getScalarValues();
+        $vals = $this->getCommonValues();
 
         $v1 = '20060707T12:00:00';
         p::xmlrpc_set_type($v1, 'datetime');
@@ -246,6 +271,7 @@ class ApiTest extends PolyfillTestCase
         $vals[] = array(array('methodname' => 'hello', 'params' => array())); // struct
 
         // these values are though for the EPI library :-) it generates invalid requests!
+        /// @todo test if the native library can encode them as responses...
         //$vals = array_merge($vals, $this->getIsFaultValues());
 
         return $vals;
@@ -253,10 +279,18 @@ class ApiTest extends PolyfillTestCase
 
     /**
      * A set of values used in most tests
-     * @todo add more values: Object, DateTime, function, Latin1 text, more nested arrays...
+     * @todo add more values: Object, DateTime, function, more nested arrays...
      */
-    protected function getScalarValues()
+    protected function getCommonValues()
     {
+        $latin1String = '';
+        // let's use only valid latin 1 chars - except range 200-209, which is buggy on _some_ platform
+        // (@see https://bugs.php.net/bug.php?id=80559)
+        /// @todo test as well for C1 control codes, which are legal in ISO_8859-1:1987
+        for ($i = 32; $i < 127; $i++) { $latin1String .= chr($i); }
+        for ($i = 160; $i < 200; $i++) { $latin1String .= chr($i); }
+        for ($i = 210; $i < 256; $i++) { $latin1String .= chr($i); }
+
         $vals = array(
             array(true),
             array(false),
@@ -272,7 +306,7 @@ class ApiTest extends PolyfillTestCase
 //            array(null), // base 64 type???, encoded as empty string
             array(''),
             array('1'),
-// fail testSetType
+// break testSetType
 //            array('-1'),
             array(' 1 '),
 //            array('2.1'),
@@ -281,6 +315,7 @@ class ApiTest extends PolyfillTestCase
             array('20060101T99:99:99'),
 //            array('a.b.c.å.ä.ö.€.'), /// @todo replace with latin-1 stuff
 //            array('Τὴ γλῶσσα μοῦ ἔδωσαν ἑλληνικὴ'), /// @todo replace with latin-1 stuff
+            array($latin1String),
             array(base64_encode('hello')), // string
             array(fopen(__FILE__, 'r')),
 
@@ -290,13 +325,13 @@ class ApiTest extends PolyfillTestCase
             array(array(true, false, 0, 1, -1, 2.0, -2.1, '', ' 1 ', ' 2.1 ', 'hello', fopen(__FILE__, 'r'))),
             array(array(array(array(1)))),
             array(array('hello' => 'world')), // struct
-// fail getType
+// break getType
 //            array(array('2' => true, false)), // array - when decoded array keys will be reset
 //            array(array('hello' => true, 'world')), // mixed
             //new apitests() // CRASH!!!,
 
             // objects
-// fail getType
+// break getType
 //            array((object)array()),
 // breaks both testEncode and testEncodeRequest
 //            array((object)array('a')),
