@@ -24,7 +24,7 @@ if (!function_exists('xmlrpc_decode_request')) {
      * @param string $encoding
      * @return mixed
      */
-    function xmlrpc_decode_request($xml, &$method, $encoding = null) { return p\XmlRpc::xmlrpc_decode_request($xml, $method, $encoding); }
+    function xmlrpc_decode_request($xml, &$method, $encoding = "iso-8859-1") { return p\XmlRpc::xmlrpc_decode_request($xml, $method, $encoding); }
 }
 
 if (!function_exists('xmlrpc_encode')) {
