@@ -56,7 +56,6 @@ else
 
     XMLRPC_PACKAGE=$(apt-cache search "php${PHP_VERSION}-xmlrpc")
     if [ -n "${XMLRPC_PACKAGE}" ]; then
-        # @todo...
         XMLRPC_PACKAGE="php${PHP_VERSION}-xmlrpc"
     fi
 
@@ -73,22 +72,19 @@ else
     update-alternatives --set php /usr/bin/php${PHP_VERSION}
 
     if [ -z "${XMLRPC_PACKAGE}" ]; then
-        :
-        # @todo...
-        #DEBIAN_FRONTEND=noninteractive apt-get install -y php${PHPSUFFIX}-dev libexpat1-dev
-        # grab source code for libxmlrpc and compile it (either that or install package libxmlrpc-epi-dev)
-        # wget ...
-        #./configure
-        #make
-        #make install
-        # grab source code for libxmlrpc-php and compile it
-        # wget ...
-        # 1. need to fix autotools
-        #cp /usr/share/libtool/build-aux/config.{guess,sub} .
-        # 2. FIXME the configure code expects somehow a warped dir structure for libxmlrpc...
-        #./configure
-        #make
-        #make install
+        # Build and enable the xmlrpc extension by hand
+        ## 1. Install dev tools
+        DEBIAN_FRONTEND=noninteractive apt-get install -y php${PHP_VERSION}-dev libexpat1-dev libxml2-dev git
+        # 2. optional - install packages libxmlrpc-epi0 and libxmlrpc-epi-dev (they are not older than upstream version from sourceforge anyway)
+        # DEBIAN_FRONTEND=noninteractive apt-get install -y libxmlrpc-epi0 libxmlrpc-epi-dev
+        # 3. build extension from PECL (it is not older than upsteram version on sourceforge anyway)
+        # pecl install xmlrpc-devel <= KO
+        git clone https://git.php.net/repository/pecl/networking/xmlrpc.git
+        export CPPFLAGS=-I/usr/include/libxml2/
+        cd xmlrpc && phpize && ./configure --with-expat && make && make install
+        echo "extension=xmlrpc.so" > /etc/php/${PHP_VERSION}/mods-available/xmlrpc.ini
+        ln -s /etc/php/${PHP_VERSION}/mods-available/xmlrpc.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-xmlrpc.ini
+        ln -s /etc/php/${PHP_VERSION}/mods-available/xmlrpc.ini /etc/php/${PHP_VERSION}/fpm/conf.d/20-xmlrpc.ini
     fi
 fi
 

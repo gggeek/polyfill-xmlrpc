@@ -18,6 +18,8 @@ configure_php_ini() {
 
 PHPVER=$(phpenv version-name)
 
+# @todo Build and enable the xmlrpc extension by hand if needed!
+
 configure_php_ini ~/.phpenv/versions/${PHPVER}/etc/php.ini
 
 # configure php-fpm
