@@ -10,7 +10,6 @@
  * It will _not_ fail if the extension is disabled, but it will of course not be validating API correspondence - just
  * that the API still works.
  */
-include_once dirname(__DIR__) . '/bootstrap.php';
 
 use PhpXmlRpc\Polyfill\XmlRpc\XmlRpc as p;
 use Yoast\PHPUnitPolyfills\TestCases\TestCase;
@@ -92,6 +91,7 @@ class ApiTest extends TestCase
         $this->assertEquals($this->canonicalizeXML($ko), $this->canonicalizeXML($ko1), "xmlrpc_encode failed for ".var_export($value, true));
 
         /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
+        ///       ex: a datetime value with an invalid time string
 
         $ok = xmlrpc_decode($ko);
         $ok1 = p::xmlrpc_decode($ko1);
@@ -266,6 +266,10 @@ class ApiTest extends TestCase
         $vals[] = array($v1);
         $vals[] = array($v2);
 
+        $vals[] = array(array($v1, $v2));
+        $vals[] = array(array('datetime value as struct member' => $v1));
+        $vals[] = array(array('base64 value as struct member' => $v2));
+
         $vals[] = array(array('hello' => true, 'hello', 'world')); // mixed - encode KO (2 members with null name) but decode will be fine!!!
         $vals[] = array(array('methodname' => 'hello', 'params' => array())); // struct
 
@@ -285,7 +289,7 @@ class ApiTest extends TestCase
         $latin1String = '';
         // let's use only valid latin 1 chars - except range 200-209, which is buggy on _some_ platform
         // (@see https://bugs.php.net/bug.php?id=80559)
-        /// @todo test as well for C1 control codes, which are legal in ISO_8859-1:1987
+        /// @todo test as well for C1 control codes, which are apparently legal in ISO_8859-1:1987
         for ($i = 32; $i < 127; $i++) { $latin1String .= chr($i); }
         for ($i = 160; $i < 200; $i++) { $latin1String .= chr($i); }
         for ($i = 210; $i < 256; $i++) { $latin1String .= chr($i); }
@@ -312,8 +316,6 @@ class ApiTest extends TestCase
 //            array(' 2.1 '),
             array('20060101T12:00:00'),
             array('20060101T99:99:99'),
-//            array('a.b.c.å.ä.ö.€.'), /// @todo replace with latin-1 stuff
-//            array('Τὴ γλῶσσα μοῦ ἔδωσαν ἑλληνικὴ'), /// @todo replace with latin-1 stuff
             array($latin1String),
             array(base64_encode('hello')), // string
             array(fopen(__FILE__, 'r')),

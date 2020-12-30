@@ -25,6 +25,7 @@ $output_options = array();
 $ct_charset= ';charset=iso-8859-1';
 
 // Allow the caller to switch between usage of the native extension (non-emulated) and the emulated implementation
+// We do this to help the testsuite: do not reproduce in production!
 if (isset($_GET['FORCE_POLYFILL']) && $_GET['FORCE_POLYFILL']) {
     $server = p::xmlrpc_server_create();
     foreach ($methods as $methodName => $function) {
@@ -34,9 +35,10 @@ if (isset($_GET['FORCE_POLYFILL']) && $_GET['FORCE_POLYFILL']) {
     $response = p::xmlrpc_server_call_method($server, $request, null, $output_options);
     p::xmlrpc_server_destroy($server);
 } else {
-    if (!isset($_GET['NO_POLYFILL']) || !$_GET['NO_POLYFILL']) {
-        require_once dirname(__DIR__) . '/../bootstrap.php';
-    }
+    // @todo
+    //if (!isset($_GET['NO_POLYFILL']) || !$_GET['NO_POLYFILL']) {
+    //    require_once dirname(__DIR__) . '/../bootstrap.php';
+    //}
     $server = xmlrpc_server_create();
     foreach ($methods as $methodName => $function) {
         xmlrpc_server_register_method($server, $methodName, $function);

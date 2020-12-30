@@ -25,6 +25,7 @@
  *   (the extension generates an invalid xmlrpc response in this case)
  * - php arrays indexed with mixed string/integer keys will preserve the integer
  *   keys in the generated structs
+ * - server method `system.getCapabilities` returns different results
  * Won't fix:
  * - differences in the generated xml
  *   - the native extension always encodes double values using 13 decimal digits (or 6, depending on version), and pads
@@ -36,12 +37,19 @@
  *   - when encoding base64 values, we don't add encoded newline characters (&#10;)
  *   - some versions of the extension have a bug encoding Latin-1 characters with code points between 200 and 209
  *     (see https://bugs.php.net/bug.php?id=80559). We do not
+ * - differences in parsing xml
+ *   - some invalid requests / responses will not be accepted that the native extension allows through:
+ *     - missing 'param' inside 'params'
+ *       eg. <methodCall><methodName>hey</methodName><params><value><string>hey</string></value></params></methodCall>
  * - differences in the API:
  *   - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request() will be encoded
  *     as structs (the extension generates an invalid xmlrpc request in this case)
  *   - sending a request for `system.methodHelp` and `system.methodSignature` for a method registered with a Server
  *     without adding any related introspection data results in an invalid response with the native extension; it does
  *     not with our code
+ *   - calling `xmlrpc_server_add_introspection_data` with method signatures makes the server validate the number
+ *     and type of incoming parameters in later calls to `xmlrpc_server_call_method`, relieving the developer from
+ *     having to implement the same checks manually in her php functions
  */
 
 namespace PhpXmlRpc\Polyfill\XmlRpc;

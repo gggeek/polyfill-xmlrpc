@@ -27,45 +27,49 @@ class Server extends BaseServer
     public function add_introspection_data($desc)
     {
         $out = 0;
-        if (is_array($desc) && isset($desc['typeList']) && is_array($desc['typeList'])) {
-        }
+        //if (is_array($desc) && isset($desc['typeList']) && is_array($desc['typeList'])) {
+        //}
         if (is_array($desc) && isset($desc['methodList']) && is_array($desc['methodList'])) {
-            foreach($desc['methodList'] as $methodName => $methodDesc) {
-                if (isset($this->dmap[$methodName])) {
-                    if (isset($methodDesc['purpose'])) {
-                        $this->dmap[$methodName]['docstring'] = $methodDesc['purpose'];
-                        $out = 1;
-                    }
-                    if (isset($methodDesc['signatures']) && is_array($methodDesc['signatures'])) {
-                        /// @todo avoid clearing existing sigs unless there is at least one valid sig provided
-                        $this->dmap[$methodName]['signature'] = array();
-                        foreach($methodDesc['signatures'] as $methodSig) {
-                            if (is_array($methodSig) && isset($methodSig['params']) && isset($methodSig['returns']) &&
-                                is_array($methodSig['params']) && is_array($methodSig['returns']) && count($methodSig['returns'])) {
-                                /// @todo decode the found types if they are in the typeList or unknown
-                                // First param is return type
-                                $params = array($methodSig['returns'][0]['type']);
-                                $paramDescriptions = array(isset($methodSig['returns'][0]['description']) ? $methodSig['returns'][0]['description'] : '');
-                                foreach($methodSig['params'] as $param) {
-                                    if (isset($param['optional']) && $param['optional']) {
-                                        // Save sig found so far, since this param is optional
-                                        /// @bug we should only do this if following parameters are optional too...
-                                        // use an array key which forces uniqueness
-                                        $this->dmap[$methodName]['signature'][implode('/', $params)] = $params;
-                                        $this->dmap[$methodName]['signature_docs'][implode('/', $params)] = $paramDescriptions;
-                                    }
-                                    $params[] = $param['type'];
-                                    $paramDescriptions[] = isset($param['description']) ? $param['description'] : '';
-                                }
+            foreach($desc['methodList'] as $methodDesc) {
+                if (!isset($methodDesc['name']) || !isset($this->dmap[$methodDesc['name']])) {
+                    continue;
+                }
+                $methodName = $methodDesc['name'];
+                /// @todo save as well in a new member of $this->dmap the whole $methodDesc, so that it can be used by _xmlrpcs_describeMethods
+                if (isset($methodDesc['purpose'])) {
+                    $this->dmap[$methodName]['docstring'] = $methodDesc['purpose'];
+                    $out = 1;
+                }
+                if (!isset($methodDesc['signatures']) || !is_array($methodDesc['signatures'])) {
+                    continue;
+                }
+                /// @todo avoid clearing existing sigs unless there is at least one valid sig provided
+                $this->dmap[$methodName]['signature'] = array();
+                foreach($methodDesc['signatures'] as $methodSig) {
+                    if (is_array($methodSig) && isset($methodSig['params']) && isset($methodSig['returns']) &&
+                        is_array($methodSig['params']) && is_array($methodSig['returns']) && count($methodSig['returns'])) {
+                        /// @todo decode the found types if they are in the typeList or unknown
+                        // First param is return type
+                        $params = array($methodSig['returns'][0]['type']);
+                        $paramDescriptions = array(isset($methodSig['returns'][0]['description']) ? $methodSig['returns'][0]['description'] : '');
+                        foreach($methodSig['params'] as $param) {
+                            if (isset($param['optional']) && $param['optional']) {
+                                // Save sig found so far, since this param is optional
+                                /// @bug we should only do this if following parameters are optional too...
+                                // use an array key which forces uniqueness
                                 $this->dmap[$methodName]['signature'][implode('/', $params)] = $params;
                                 $this->dmap[$methodName]['signature_docs'][implode('/', $params)] = $paramDescriptions;
-                                $out = 1;
                             }
+                            $params[] = $param['type'];
+                            $paramDescriptions[] = isset($param['description']) ? $param['description'] : '';
                         }
-                        $this->dmap[$methodName]['signature'] = array_values($this->dmap[$methodName]['signature']);
-                        $this->dmap[$methodName]['signature_docs'] = array_values($this->dmap[$methodName]['signature_docs']);
+                        $this->dmap[$methodName]['signature'][implode('/', $params)] = $params;
+                        $this->dmap[$methodName]['signature_docs'][implode('/', $params)] = $paramDescriptions;
+                        $out = 1;
                     }
                 }
+                $this->dmap[$methodName]['signature'] = array_values($this->dmap[$methodName]['signature']);
+                $this->dmap[$methodName]['signature_docs'] = array_values($this->dmap[$methodName]['signature_docs']);
             }
         }
         return $out;

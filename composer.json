@@ -14,7 +14,9 @@
         "phpxmlrpc/phpxmlrpc": "dev-master as 4.5.0-dev"
     },
     "require-dev": {
+        "ext-curl": "*",
         "phpunit/phpunit": "^5.0 || ^8.5.12",
+        "phpunit/phpunit-selenium": "*",
         "yoast/phpunit-polyfills": "*"
     },
     "suggest": {

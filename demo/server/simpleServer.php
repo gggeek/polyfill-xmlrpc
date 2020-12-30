@@ -4,12 +4,16 @@
  * NB: keep code in sync with the equivalent server in /tests/server
  */
 
-require_once dirname(__DIR__) . '/../bootstrap.php';
+require_once __DIR__ . '/_prepend.php';
 
 function hello($method, $params, $userData)
 {
     if (!count($params)) {
-        return array('faultCode' => 1, 'faultString' => "missing first parameter");
+        return array('faultCode' => 1, 'faultString' => "missing parameter");
+    }
+
+    if (!is_string($params[0])) {
+        return array('faultCode' => 2, 'faultString' => "parameter is not a string: " . xmlrpc_get_type($params[0]));
     }
 
     return "hello {$params[0]}";
@@ -35,9 +39,10 @@ function introspectionCallback($userData)
     </signature>
    </signatures>
    <!--<see><item>system.listMethods</item></see>-->
-   <examples/>
+   <!--<examples/>-->
    <errors>
       <item>returns fault code 1 if the caller's name is not specified</item>
+      <item>returns fault code 2 if the caller's name is not a string</item>
    </errors>
    <!--<notes>
     <item>this is a lame example</item>
@@ -65,8 +70,9 @@ if ($response) {
     header('Content-Type: text/xml;charset=iso-8859-1');
     echo $response;
 } else {
-    // Q: is this possible at all?
-    // A: looking at sources, it seems that the only possible case is if there was an oom error.
-    //    We should probably try to echo back a valid xmlrpc fault response while avoiding _any_ memory allocation...
+    // Looking at sources, it seems that the only possible case for this is if there was an oom error.
+    // We should probably try to echo back a valid xmlrpc fault response while avoiding _any_ memory allocation...
     header((isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0') . ' 500 Internal Server Error');
 }
+
+require_once __DIR__ . "/_append.php";
