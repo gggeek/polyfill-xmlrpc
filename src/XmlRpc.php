@@ -50,6 +50,11 @@
  *   - calling `xmlrpc_server_add_introspection_data` with method signatures makes the server validate the number
  *     and type of incoming parameters in later calls to `xmlrpc_server_call_method`, relieving the developer from
  *     having to implement the same checks manually in her php functions
+ *   - marking input parameters as optional in the data passed to calls to `xmlrpc_server_add_introspection_data` and
+ *     `xmlrpc_server_register_introspection_callback` will change the number of method signatures displayed by the
+ *     server in responses to calls to `system.methodSignature`.
+ *     Eg. passing in one signature with one optional param will result in two signatures displayed, one with no params
+ *     and one with one param
  */
 
 namespace PhpXmlRpc\Polyfill\XmlRpc;

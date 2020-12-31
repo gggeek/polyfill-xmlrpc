@@ -23,6 +23,7 @@ class Server extends BaseServer
      * @param array $desc
      * @return int 1 if anything got added to the docs, 0 otherwise
      * @see XMLRPC_ServerAddIntrospectionData in xmlrpc_intropspection.c
+     * @todo save as well in a new member of $this->dmap the combined methodList+typeList, so that it can be used by _xmlrpcs_describeMethods
      */
     public function add_introspection_data($desc)
     {
@@ -35,7 +36,6 @@ class Server extends BaseServer
                     continue;
                 }
                 $methodName = $methodDesc['name'];
-                /// @todo save as well in a new member of $this->dmap the whole $methodDesc, so that it can be used by _xmlrpcs_describeMethods
                 if (isset($methodDesc['purpose'])) {
                     $this->dmap[$methodName]['docstring'] = $methodDesc['purpose'];
                     $out = 1;
@@ -84,6 +84,18 @@ class Server extends BaseServer
     public static function parse_method_descriptions($xml)
     {
         return array();
+    }
+
+    /**
+     * Reimplement to allow users to register their own 'system.' methods
+     * @param string $methName
+     * @return bool
+     */
+    protected function isSyscall($methName)
+    {
+        return in_array($methName, array(
+            'system.listMethods', 'system.methodHelp', 'system.methodSignature', 'system.multicall', 'system.getCapabilities', // 'system.describeMethods',
+        ));
     }
 
     /**

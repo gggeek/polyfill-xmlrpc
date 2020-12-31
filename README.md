@@ -1,11 +1,27 @@
+Polyfill-XMLRPC
+===============
+
 A pure-php reimplementation of the API exposed by the native XML-RPC extension.
 
 Originally bundled as part of the [phpxmlrpc/extras](https://github.com/gggeek/phpxmlrpc-extras) package.
 
-*Work In Progress!*
-
 Known differences from the original extension
 ---------------------------------------------
+
+### Work in Progress!
+
+This library is not complete yet, and thus to be considered a Work in Progress.
+
+Main features missing are:
+- character set handling: at the moment only Latin1 (aka iso-8859-1) is supported - the $encoding argument does nothing in xmlrpc_decode() and xmlrpc_decode_request()
+- the $output_options argument in xmlrpc_encode_request() does nothing
+- the `xmlrpc_parse_method_descriptions` and `xmlrpc_server_register_introspection_callback` functions exist but do nothing
+- xmlrpc server method `system.describeMethods` is not implemented
+
+For a detailed list of all known differences compared to the behaviour of the PHP extension, see comments at the top of
+file [XmlRpc.php](src/XmlRpc.php).
+
+### Compatibility goals
 
 We strive to reproduce the same behaviour as the XML-RPC extension to the best "reasonable" extent.
 
@@ -16,8 +32,6 @@ This means that the following are _not_ goals of this package:
 
 - reproducing behaviour of the native extension which is clearly buggy
   Eg. the native extension will produce invalid xmlrpc requests when specific values are passed to an `xmlrpc_encode_request` call
-
-For a detailed list of known differences, see comments at the top of file [XmlRpc.php](src/XmlRpc.php).
 
 Installation and usage
 ----------------------
