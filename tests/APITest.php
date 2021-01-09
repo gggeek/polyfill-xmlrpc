@@ -1,7 +1,7 @@
 <?php
 /**
  * @author Gaetano Giunta
- * @copyright (c) 2020 G. Giunta
+ * @copyright (c) 2020-2021 G. Giunta
  * @license code licensed under the BSD License: see license.txt
  */
 
@@ -31,6 +31,7 @@ class ApiTest extends TestCase
             echo "WARNING: xmlrpc extension is not loaded. Tests are less meaningful!\n";
         }
     }
+
     /**
      * @dataProvider getGetTypeValues
      */
