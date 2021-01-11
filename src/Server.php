@@ -2,7 +2,9 @@
 
 namespace PhpXmlRpc\Polyfill\XmlRpc;
 
+use PhpXmlRpc\Response;
 use PhpXmlRpc\Server as BaseServer;
+use PhpXmlRpc\Value;
 
 class Server extends BaseServer
 {
@@ -143,7 +145,7 @@ class Server extends BaseServer
     /**
      * @param Server $server
      * @param \PhpXmlRpc\Request $req
-     * @return \PhpXmlRpc\Response
+     * @return Response
      */
     public static function _xmlrpcs_methodSignature($server, $req)
     {
@@ -157,11 +159,85 @@ class Server extends BaseServer
 
     /**
      * @param Server $server
-     * @param \PhpXmlRpc\Request $req
-     * @return \PhpXmlRpc\Response
-     * @todo implement
+     * @param \PhpXmlRpc\Request|string[]|null $req
+     * @return Response
+     * @todo finish implementation...
      */
-    public static function _xmlrpcs_describeMethods($server, $req)
+    public static function _xmlrpcs_describeMethods($server, $req = null)
     {
+        // allow jit evaluation of xml-based method descriptions
+        if ($server->introspectionCallback) {
+            $server->add_introspection_data(Server::parse_method_descriptions(call_user_func($server->introspectionCallback)));
+            $server->register_introspection_callback(null);
+        }
+
+        if (is_object($req)) {
+            if ($req->getNumParams() > 0) {
+                $methods = array();
+                foreach($req->getParam(0) as $val) {
+                    /// @todo check that $val is scalar...
+                    $methods[] = $val->scalarval();
+                }
+            } else {
+                $methods = null;
+            }
+        } else {
+            $methods = $req;
+        }
+
+        $toDescribe = array();
+        foreach ($server->dmap as $key => $val) {
+            if ($methods === null || in_array($key, $methods)) {
+                $toDescribe[$key] = $val;
+            }
+        }
+        foreach ($server->getSystemDispatchMap() as $key => $val) {
+            if ($methods === null || in_array($key, $methods)) {
+                $toDescribe[$key] = $val;
+            }
+        }
+
+        $mList = array();
+        foreach ($toDescribe as $method => $mData) {
+            $sigs = array();
+            foreach($mData['signature'] as $i => $signature) {
+                $pars = array();
+                foreach(array_slice($signature, 1) as $param) {
+                    $pars[] = new Value(array(
+                            'type' => $param,
+                            'description' => '',
+                            //'name' => '',
+                            'optional' => new Value(false, Value::$xmlrpcBoolean),
+                        ), Value::$xmlrpcStruct);
+                }
+                $ret = new Value(array(
+                        'type' => $signature[0],
+                        'description' => '',
+                        //'name' => '',
+                        'optional' => new Value(false, Value::$xmlrpcBoolean),
+                    ), Value::$xmlrpcStruct);
+                $sigs[] = new Value(array(
+                        'params' => new Value($pars, Value::$xmlrpcArray),
+                        'returns' => new Value(array($ret), Value::$xmlrpcArray)
+                    ), Value::$xmlrpcStruct);
+            }
+            $mDesc = array(
+                'name' => new Value($method, Value::$xmlrpcString),
+                //'version' => '',
+                //'author' => '',
+                'purpose' => new Value($mData['docstring'], Value::$xmlrpcString),
+                'signatures' => new Value($sigs, Value::$xmlrpcArray),
+                //'bugs' => array(),
+                //'errors' => array(),
+                //'examples' => array(),
+                //'history' => array(),
+                //'notes' => array(),
+                //'see' => array(),
+                //'todo' => array(),
+            );
+            $mList[] = new Value($mDesc, Value::$xmlrpcStruct);
+        }
+
+        return new Response(new Value(array('methodList' => new Value($mList, Value::$xmlrpcArray)), Value::$xmlrpcStruct));
     }
 }

@@ -13,8 +13,10 @@ Known differences from the original extension
 This library is not complete yet, and thus to be considered a Work in Progress.
 
 Main features missing are:
-- character set handling: at the moment only Latin1 (aka iso-8859-1) is supported - the $encoding argument does nothing in xmlrpc_decode() and xmlrpc_decode_request()
-- the $output_options argument in xmlrpc_encode_request() does nothing
+- character set handling: at the moment utf-8 and iso-8859-1 are supported: iso-8859-1 as default, and utf8
+  - via  the `$encoding` argument to `xmlrpc_decode()` and `xmlrpc_decode_request()`
+  - via setting `'encoding' => 'UTF-8'` and `'escaping' => 'markup'` in the `$options` to `xmlrpc_encode_request`
+
 - the `xmlrpc_parse_method_descriptions` and `xmlrpc_server_register_introspection_callback` functions exist but do nothing
 - xmlrpc server method `system.describeMethods` is not implemented
 

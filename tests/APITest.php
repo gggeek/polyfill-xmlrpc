@@ -108,12 +108,12 @@ class ApiTest extends TestCase
     /**
      * @dataProvider getEncodeRequestValues
      */
-    function testEncodeRequest($value)
+    function testEncodeRequest($value, $options)
     {
         /// @todo add more encoding tests with different method names: empty string, invalid charset, non-string
 
-        $ok = xmlrpc_encode_request('hello', $value);
-        $ok1 = p::xmlrpc_encode_request('hello', $value);
+        $ok = xmlrpc_encode_request('hello', $value, $options);
+        $ok1 = p::xmlrpc_encode_request('hello', $value, $options);
         $this->assertEquals($this->canonicalizeXML($ok), $this->canonicalizeXML($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
 
         /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
@@ -134,14 +134,14 @@ class ApiTest extends TestCase
     }
 
     /**
-     * @dataProvider getEncodeRequestValues
+     * @dataProvider getEncodeResponseValues
      */
-    function testEncodeResponse($value)
+    function testEncodeResponse($value, $options)
     {
         // methodresponse generated
 
-        $ok = xmlrpc_encode_request(null, $value);
-        $ok1 = p::xmlrpc_encode_request(null, $value);
+        $ok = xmlrpc_encode_request(null, $value, $options);
+        $ok1 = p::xmlrpc_encode_request(null, $value, $options);
         $this->assertEquals($this->canonicalizeXML($ok), $this->canonicalizeXML($ok1), "xmlrpc_encode_request failed for ".var_export($value, true));
 
         /// @todo add more decoding tests: non-string values, invalid xml, non-xmlrpc xml
@@ -159,6 +159,42 @@ class ApiTest extends TestCase
         $ko3 = p::xmlrpc_decode_request($ok, $methodName1);
         $this->assertEquals($ko2, $ko3, "xmlrpc_decode_request return failed for ".var_export($ok, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
+    }
+
+    /**
+     * @dataProvider getCharsetDecodingValues
+     */
+    public function testCharsetDecoding($charset, $text)
+    {
+        $reqText = '<?xml version="1.0" ?><methodCall><methodName>' . $text . '</methodName><params><param><value>' .
+            $text . '</value></param></params></methodCall>';
+        $respText = '<?xml version="1.0" ?><methodResponse><fault><value><struct>' .
+            '<member><name>faultCode</name><value><int>1</int></value></member>' .
+            '<member><name>faultString</name><value><string>' . $text. '</string></value></member>' .
+            '</struct></value></fault></methodResponse>';
+
+        // check encoding of method names, element values and fault response strings
+
+        $methodName = '';
+        $methodName1 = '';
+        if ($charset === null) {
+            $ok = xmlrpc_decode_request($reqText, $methodName);
+            $ok1 = p::xmlrpc_decode_request($reqText, $methodName1);
+        } else {
+            $ok = xmlrpc_decode_request($reqText, $methodName, $charset);
+            $ok1 = p::xmlrpc_decode_request($reqText, $methodName1, $charset);
+        }
+        $this->assertEquals($ok[0], $ok1[0], "xmlrpc_decode_request return failed");
+        $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed");
+
+        if ($charset === null) {
+            $ok = xmlrpc_decode($respText);
+            $ok1 = p::xmlrpc_decode($respText);
+        } else {
+            $ok = xmlrpc_decode($respText, $charset);
+            $ok1 = p::xmlrpc_decode($respText, $charset);
+        }
+        $this->assertEquals($ok['faultString'], $ok1['faultString'], "xmlrpc_decode fault return failed");
     }
 
     /**
@@ -220,7 +256,7 @@ class ApiTest extends TestCase
     /// @todo add more cases with wrong type for faultCode & faultString: null, float, object, resource
     public function getIsFaultValues()
     {
-        $vals = array(
+        $values = array(
             array(array('faultCode' => 666, 'faultString' => 'hello world')),
 
             array(array()),
@@ -244,41 +280,129 @@ class ApiTest extends TestCase
 //            array(array('faultCode' => array(666), 'faultString' => 'hello world')),
 //            array(array('faultCode' => 666, 'faultString' => array('hello world'))),
         );
-        return $vals;
+        return $values;
     }
 
     public function getEncodeValues()
     {
-        $vals = $this->getEncodeRequestValues();
-
-        $vals = array_merge($vals, $this->getIsFaultValues());
-
-        return $vals;
-    }
-
-    public function getEncodeRequestValues()
-    {
-        $vals = $this->getCommonValues();
+        $values = $this->getCommonValues();
 
         $v1 = '20060707T12:00:00';
         p::xmlrpc_set_type($v1, 'datetime');
         $v2 = 'hello world';
         p::xmlrpc_set_type($v2, 'base64');
-        $vals[] = array($v1);
-        $vals[] = array($v2);
+        $values[] = array($v1);
+        $values[] = array($v2);
 
-        $vals[] = array(array($v1, $v2));
-        $vals[] = array(array('datetime value as struct member' => $v1));
-        $vals[] = array(array('base64 value as struct member' => $v2));
+        $values[] = array(array($v1, $v2));
+        $values[] = array(array('datetime value as struct member' => $v1));
+        $values[] = array(array('base64 value as struct member' => $v2));
 
-        $vals[] = array(array('hello' => true, 'hello', 'world')); // mixed - encode KO (2 members with null name) but decode will be fine!!!
-        $vals[] = array(array('methodname' => 'hello', 'params' => array())); // struct
+        $values[] = array(array('hello' => true, 'hello', 'world')); // mixed - encode KO (2 members with null name) but decode will be fine!!!
+        $values[] = array(array('methodname' => 'hello', 'params' => array())); // struct
+
+        $values = array_merge($values, $this->getIsFaultValues());
+
+        return $values;
+    }
+
+    public function getEncodeRequestValues()
+    {
+        $optionSets = array(
+            array(),
+            //array('escaping' => 'cdata'),
+            //array('escaping' => 'non-ascii'),
+            //array('escaping' => 'non-print'),
+            array('escaping' => 'markup'),
+            array('escaping' => null),
+            array('escaping' => 'blah!'),
+            array('encoding' => 'iso-8859-1'),
+            array('encoding' => 'ISO-8859-1'),
+            array('encoding' => 'ISO-8859-1', 'escaping' => 'markup'),
+            //array('encoding' => 'utf-8'),
+            //array('encoding' => 'UTF-8'),
+// works but generates warnings (for the latin-1 string)
+            //array('encoding' => 'utf-8', 'escaping' => 'markup'),
+            array('encoding' => null),
+// works but generates warnings
+            //array('encoding' => 'blah!'),
+        );
+
+        $values = $this->getCommonValues();
+
+        //$cp1252string = '';
+
+        $v1 = '20060707T12:00:00';
+        p::xmlrpc_set_type($v1, 'datetime');
+        $v2 = 'hello world';
+        p::xmlrpc_set_type($v2, 'base64');
+        $values[] = array($v1);
+        $values[] = array($v2);
+
+        $values[] = array(array($v1, $v2));
+        $values[] = array(array('datetime value as struct member' => $v1));
+        $values[] = array(array('base64 value as struct member' => $v2));
+
+        $values[] = array(array('hello' => true, 'hello', 'world')); // mixed - encode KO (2 members with null name) but decode will be fine!!!
+        $values[] = array(array('methodname' => 'hello', 'params' => array())); // struct
 
         // these values are though for the EPI library :-) it generates invalid requests!
         /// @todo test if the native library can encode them as responses...
-        //$vals = array_merge($vals, $this->getIsFaultValues());
+        //$values = array_merge($values, $this->getIsFaultValues());
 
-        return $vals;
+        $out = array();
+        foreach($optionSets as $optionSet) {
+            foreach($values as $value) {
+                $value[] = $optionSet;
+                $out[] = $value;
+            }
+        }
+
+        $out[] = array('Река неслася; бедный чёлн', array('encoding' => 'UTF-8', 'escaping' => 'markup'));
+        $out[] = array('Река неслася; бедный чёлн', array('encoding' => 'UTF-8', 'escaping' => array('markup')));
+// fails, but in this scenario the EPI lib emits wrong character entities!
+        //$out[] = array('我能', array('encoding' => 'UTF-8'));
+
+        return $out;
+    }
+
+    public function getEncodeResponseValues()
+    {
+        return $this->getEncodeRequestValues();
+    }
+
+    public function getCharsetDecodingValues()
+    {
+        $texts = array(
+            '', // just in case
+            'Hello 123', // can be represented in ascii
+            'Hélène', // can be represented in latin-1
+            'Река неслася; бедный чёлн', // needs utf-8
+        );
+
+        $charsets = array(
+            null,
+            'US-ASCII',
+            'ISO-8859-1',
+            'UTF-8',
+            // lowercase variants
+            'us-ascii',
+            'iso-8859-1',
+            'utf-8',
+            // aliases
+            'UTF8',
+            'ISO-88591',
+            'NOTAKNOWNCHARSET',
+        );
+
+        $out = array();
+        foreach($charsets as $charset) {
+            foreach($texts as $text) {
+                $out[] = array($charset, $text);
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -295,7 +419,7 @@ class ApiTest extends TestCase
         for ($i = 160; $i < 200; $i++) { $latin1String .= chr($i); }
         for ($i = 210; $i < 256; $i++) { $latin1String .= chr($i); }
 
-        $vals = array(
+        $values = array(
             array(true),
             array(false),
             array(0),
@@ -353,6 +477,6 @@ class ApiTest extends TestCase
 //            array((object)array('xmlrpc_type' => 'base64', 'scalar' => null)),
         );
 
-        return $vals;
+        return $values;
     }
 }

@@ -1,3 +1,10 @@
+## v1.0-beta (2021/1/..)
+
+- Improved: support for decoding UTF8 characters in xml
+- Improved: support for the `$encoding` argument in `xmlrpc_decode()` and `xmlrpc_decode_request()`
+- Improved: partial support for the `$options` parameter in `xmlrpc_encode_request`
+
+
 ## v1.0-alpha (2020/12/31)
 
 Hello world!
