@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^5.3.0 || ^7.0 || ^8.0",
-        "phpxmlrpc/phpxmlrpc": "^4.5.0"
+        "phpxmlrpc/phpxmlrpc": "^4.5.2"
     },
     "require-dev": {
         "ext-curl": "*",
@@ -20,6 +20,7 @@
         "yoast/phpunit-polyfills": "*"
     },
     "suggest": {
+        "ext-iconv": "Required when using anything other than utf-8 as target encoding for the decoded xml",
         "ext-xmlrpc": "Recommended for running the test suite. We can not declare it in require-dev because it is missing in php 8"
     },
     "autoload": {
