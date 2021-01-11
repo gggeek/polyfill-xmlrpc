@@ -1,3 +1,8 @@
+## v1.0-RC1 (unreleased)
+
+- Improved: servers now support answering calls to the `system.describeMethods` introspection method
+
+
 ## v1.0-beta (2021/1/11)
 
 - Improved: support for handling UTF8 characters both in received and in generated xml

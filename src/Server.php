@@ -96,7 +96,7 @@ class Server extends BaseServer
     protected function isSyscall($methName)
     {
         return in_array($methName, array(
-            'system.listMethods', 'system.methodHelp', 'system.methodSignature', 'system.multicall', 'system.getCapabilities', // 'system.describeMethods',
+            'system.listMethods', 'system.methodHelp', 'system.methodSignature', 'system.multicall', 'system.getCapabilities', 'system.describeMethods',
         ));
     }
 
@@ -114,15 +114,20 @@ class Server extends BaseServer
             $dmap['system.methodSignature']['function'] = 'PhpXmlRpc\Polyfill\XmlRpc\Server::_xmlrpcs_methodSignature';
         }
 
-        /*$dmap['system.describeMethods'] = array(
-            'function' => 'PhpXmlRpc\Server::_xmlrpcs_describeMethods',
-            'signature' => array(array(Value::$xmlrpcStruct), array(Value::$xmlrpcStruct, Value::$xmlrpcArray)),
+        $dmap['system.describeMethods'] = array(
+            'function' => 'PhpXmlRpc\Polyfill\XmlRpc\Server::_xmlrpcs_describeMethods',
+            'signature' => array(
+                array(Value::$xmlrpcStruct),
+                array(Value::$xmlrpcStruct, Value::$xmlrpcString),
+                array(Value::$xmlrpcStruct, Value::$xmlrpcArray)
+            ),
             'docstring' => 'See http://xmlrpc-epi.sourceforge.net/specs/rfc.system.describeMethods.php',
             'signature_docs' => array(
                 array('list of method descriptions: struct{}'),
+                array('list of method descriptions: struct{}', 'Method to describe: string'),
                 array('list of method descriptions: struct{}', 'List of methods to describe: string[]')
             ),
-        );*/
+        );
 
         return $dmap;
     }
@@ -158,10 +163,11 @@ class Server extends BaseServer
     }
 
     /**
+     * Note: we _could_ improve this, however the xmlrpc extension has apparently bug, which prevents it from listing
+     * _any_ registered method when answering to these calls. So it's just not worth it...
      * @param Server $server
-     * @param \PhpXmlRpc\Request|string[]|null $req
+     * @param \PhpXmlRpc\Request|string|string[]|null $req
      * @return Response
-     * @todo finish implementation...
      */
     public static function _xmlrpcs_describeMethods($server, $req = null)
     {
@@ -174,15 +180,20 @@ class Server extends BaseServer
         if (is_object($req)) {
             if ($req->getNumParams() > 0) {
                 $methods = array();
-                foreach($req->getParam(0) as $val) {
-                    /// @todo check that $val is scalar...
-                    $methods[] = $val->scalarval();
+                $p1 = $req->getParam(0);
+                if ($p1->scalartyp() == Value::$xmlrpcString) {
+                    $methods[] = $p1->scalarval();
+                } else {
+                    foreach($p1 as $val) {
+                        /// @todo check that $val is scalar...
+                        $methods[] = $val->scalarval();
+                    }
                 }
             } else {
                 $methods = null;
             }
         } else {
-            $methods = $req;
+            $methods = is_string($req) ? array($req): $req;
         }
 
         $toDescribe = array();
@@ -204,15 +215,15 @@ class Server extends BaseServer
                 $pars = array();
                 foreach(array_slice($signature, 1) as $param) {
                     $pars[] = new Value(array(
-                            'type' => $param,
-                            'description' => '',
+                            'type' => new Value($param, Value::$xmlrpcString),
+                            'description' => new Value('', Value::$xmlrpcString),
                             //'name' => '',
                             'optional' => new Value(false, Value::$xmlrpcBoolean),
                         ), Value::$xmlrpcStruct);
                 }
                 $ret = new Value(array(
-                        'type' => $signature[0],
-                        'description' => '',
+                        'type' => new Value($signature[0], Value::$xmlrpcString),
+                        'description' => new Value('', Value::$xmlrpcString),
                         //'name' => '',
                         'optional' => new Value(false, Value::$xmlrpcBoolean),
                     ), Value::$xmlrpcStruct);
