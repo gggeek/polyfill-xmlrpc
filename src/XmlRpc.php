@@ -203,7 +203,7 @@ final class XmlRpc
      * of them. If method name === null, create an xmlrpc response instead
      * @param string $method
      * @param array $params
-     * @param array $output_options options array
+     * @param array $output_options options array. At the moment only partial support for 'encoding' and 'escaping' is provided
      * @return string
      *
      * @todo implement parsing/usage of options: encoding, escaping.

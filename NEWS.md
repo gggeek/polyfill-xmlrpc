@@ -1,8 +1,9 @@
-## v1.0-beta (2021/1/..)
+## v1.0-beta (2021/1/11)
 
 - Improved: support for handling UTF8 characters both in received and in generated xml
 - Improved: support for the `$encoding` argument in `xmlrpc_decode()` and `xmlrpc_decode_request()`
 - Improved: partial support for the `$options` parameter in `xmlrpc_encode_request`, allowing UTF8 in native strings
+  via setting `'encoding' => 'UTF-8'` and `'escaping' => 'markup'`
 
 
 ## v1.0-alpha (2020/12/31)
