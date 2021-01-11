@@ -110,7 +110,7 @@ class ApiTest extends TestCase
      */
     function testEncodeRequest($value, $options)
     {
-        /// @todo add more encoding tests with different method names: empty string, invalid charset, non-string
+        /// @todo add more encoding tests with different method names: empty string, different charsets, non-string
 
         $ok = xmlrpc_encode_request('hello', $value, $options);
         $ok1 = p::xmlrpc_encode_request('hello', $value, $options);
@@ -124,6 +124,7 @@ class ApiTest extends TestCase
         $ko1 = p::xmlrpc_decode_request($ok1, $methodName1);
         $this->assertEquals($ko, $ko1, "xmlrpc_decode_request return failed for ".var_export($ok1, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok1, true));
+        $this->assertEquals($methodName, 'hello');
 
         $methodName = '';
         $methodName1 = '';
@@ -131,6 +132,7 @@ class ApiTest extends TestCase
         $ko3 = p::xmlrpc_decode_request($ok, $methodName1);
         $this->assertEquals($ko2, $ko3, "xmlrpc_decode_request return failed for ".var_export($ok, true));
         $this->assertEquals($methodName, $methodName1, "xmlrpc_decode_request method failed for ".var_export($ok, true));
+        $this->assertEquals($methodName, 'hello');
     }
 
     /**

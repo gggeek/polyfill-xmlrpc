@@ -36,6 +36,8 @@
  *   - when encoding base64 values, we don't add encoded newline characters (&#10;)
  *   - some versions of the extension have a bug encoding Latin-1 characters with code points between 200 and 209
  *     (see https://bugs.php.net/bug.php?id=80559). We do not
+ *   - calling `xmlrpc_encode_request($methodName, $utf8text, options(array('encoding' => 'UTF-8')))` is buggy with
+ *     the extension (wrong character entities are generated). It works with us
  * - differences in parsing xml
  *   - some invalid requests / responses will not be accepted that the native extension allows through:
  *     - missing 'param' inside 'params'
