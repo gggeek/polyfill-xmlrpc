@@ -238,7 +238,7 @@ final class XmlRpc
                 ///         - when going iso-8859-1 -> ascii, convert chars <32 and 160-255 (but not 127-159)
                 ///         - when going utf8 -> ascii, convert chars <32 and >= 128 (but not 127)
                 ///         - never wrap the text in a cdata section
-                case is_array($output_options['escaping']) && !in_array('non-print', $output_options['escaping']) && !in_array('non-ascii', $output_options['non-ascii']):
+                case is_array($output_options['escaping']) && !in_array('non-print', $output_options['escaping']) && !in_array('non-ascii', $output_options['escaping']):
                 case $output_options['escaping'] == 'markup':
                 case $output_options['escaping'] == 'cdata':
                     $targetCharset = $targetEncoding;
