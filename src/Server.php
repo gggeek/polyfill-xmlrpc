@@ -168,6 +168,7 @@ class Server extends BaseServer
      * @param Server $server
      * @param \PhpXmlRpc\Request|string|string[]|null $req
      * @return Response
+     * @todo finish implementation - esp. the missing TypeList
      */
     public static function _xmlrpcs_describeMethods($server, $req = null)
     {

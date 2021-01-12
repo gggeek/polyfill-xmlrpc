@@ -63,41 +63,37 @@ function introspectionData()
     return array (
         'methodList' =>
             array (
-                0 =>
-                    array (
-                        'name' => 'introspection.hello',
-                        'purpose' => 'greets the caller and demonstrates use of introspection mechanism',
-                        'signatures' =>
+                array (
+                    'name' => 'introspection.hello',
+                    'purpose' => 'greets the caller and demonstrates use of introspection mechanism',
+                    'signatures' =>
+                        array (
                             array (
-                                0 =>
+                                'params' =>
                                     array (
-                                        'params' =>
-                                            array (
-                                                0 =>
-                                                    array (
-                                                        'name' => 'name',
-                                                        'type' => 'string',
-                                                        'description' => 'name of the caller',
-                                                        'optional' => 0,
-                                                    ),
-                                            ),
-                                        'returns' =>
-                                            array (
-                                                0 =>
-                                                    array (
-                                                        'type' => 'string',
-                                                        'description' => 'a greeting to the caller',
-                                                        'optional' => 0,
-                                                    ),
-                                            ),
+                                        array (
+                                            'name' => 'name',
+                                            'type' => 'string',
+                                            'description' => 'name of the caller',
+                                            'optional' => 0,
+                                        ),
+                                    ),
+                                'returns' =>
+                                    array (
+                                        array (
+                                            'type' => 'string',
+                                            'description' => 'a greeting to the caller',
+                                            'optional' => 0,
+                                        ),
                                     ),
                             ),
-                        'errors' =>
-                            array (
-                                0 => 'returns fault code 1 if the caller\'s name is not specified',
-                                1 => 'returns fault code 2 if the caller\'s name is not a string',
-                            ),
-                    ),
+                        ),
+                    'errors' =>
+                        array (
+                            'returns fault code 1 if the caller\'s name is not specified',
+                            'returns fault code 2 if the caller\'s name is not a string',
+                        ),
+                ),
             ),
         );
 }
