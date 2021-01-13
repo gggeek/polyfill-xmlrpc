@@ -204,7 +204,10 @@ final class XmlRpc
      * of them. If method name === null, create an xmlrpc response instead
      * @param string $method
      * @param array $params
-     * @param array $output_options options array. At the moment only partial support for 'encoding' and 'escaping' is provided
+     * @param array $output_options options array. At the moment only partial support for 'encoding' and 'escaping' is
+     *                              provided.
+     *                              encoding: iso-8859-1, utf-8
+     *                              escaping: [markup], [markup,non-print]. non-ascii is treated the same as non-print
      * @return string
      *
      * @todo complete parsing/usage of options: encoding, escaping.
@@ -238,6 +241,13 @@ final class XmlRpc
                 ///         - when going iso-8859-1 -> ascii, convert chars <32 and 160-255 (but not 127-159)
                 ///         - when going utf8 -> ascii, convert chars <32 and >= 128 (but not 127)
                 ///         - never wrap the text in a cdata section
+                ///        We should:
+                ///        1. log a warning if being passed options which do not make sense, eg.
+                ///           - cdata along with any other option
+                ///           - any strategy, apart cdata, missing markup (as we always escape markup)
+                ///           - an empty array (same)
+                ///        2. support cdata escaping (done correctly)
+                ///        3. support different escaping for non-print and non-ascii
                 case is_array($output_options['escaping']) && !in_array('non-print', $output_options['escaping']) && !in_array('non-ascii', $output_options['escaping']):
                 case $output_options['escaping'] == 'markup':
                 case $output_options['escaping'] == 'cdata':
@@ -332,8 +342,8 @@ final class XmlRpc
                 return $ok ? Value::$xmlrpcArray : Value::$xmlrpcStruct;
             case 'object':
                 if ($value instanceof Value) {
-/// @todo fixme
-                    list($type, $value) = each($value->me);
+                    reset($value->me);
+                    $type = key($value->me);
                     return str_replace(array('i4', 'dateTime.iso8601'), array('int', 'datetime'), $type);
                 } elseif ($value instanceof \stdClass && isset($value->xmlrpc_type)) {
                     switch($value->xmlrpc_type) {
