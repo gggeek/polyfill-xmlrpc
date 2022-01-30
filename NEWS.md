@@ -1,6 +1,8 @@
-## v1.0-RC1 (unreleased)
+## v1.0-RC1 (2022/1/30)
 
 - Improved: servers now support answering calls to the `system.describeMethods` introspection method
+
+- Improved: composer.json now declares this package as replacement for `ext-xmlrpc`
 
 
 ## v1.0-beta (2021/1/11)

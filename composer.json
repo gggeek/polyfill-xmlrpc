@@ -9,6 +9,9 @@
         "extension",
         "polyfill"
     ],
+    "provide": {
+        "ext-xmlrpc": "*"
+    },
     "require": {
         "php": "^5.3.0 || ^7.0 || ^8.0",
         "phpxmlrpc/phpxmlrpc": "^4.5.2"
