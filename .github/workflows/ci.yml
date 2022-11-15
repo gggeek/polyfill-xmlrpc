@@ -5,22 +5,32 @@ on: [push, pull_request]
 jobs:
     test:
         runs-on: ${{ matrix.operating-system }}
-        env:
-            HTTPSERVER: localhost
-            URI: /tests/server.php
-            HTTPSSERVER: localhost
-            HTTPSURI: /tests/server.php
-            # @todo verify if we need this. Was: Travis currently compiles PHP with an oldish cURL/GnuTLS combination;
-            # to make the tests pass when Apache has a bogus SSL cert whe need the full set of options below
-            HTTPSVERIFYHOST: 0
-            HTTPSIGNOREPEER: 1
-            SSLVERSION: 0
-            DEBUG: 0
+        # @todo enable testing of server-side, using apache + php-fpm
+        #env:
+        #    HTTPSERVER: localhost
+        #    URI: /tests/server.php
+        #    HTTPSSERVER: localhost
+        #    HTTPSURI: /tests/server.php
+        #    # @todo verify if we need this. Was: Travis currently compiles PHP with an oldish cURL/GnuTLS combination;
+        #    # to make the tests pass when Apache has a bogus SSL cert whe need the full set of options below
+        #    HTTPSVERIFYHOST: 0
+        #    HTTPSIGNOREPEER: 1
+        #    SSLVERSION: 0
+        #    DEBUG: 0
         strategy:
             fail-fast: false
             matrix:
                 # @see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners for available os versions
                 include:
+                    - php: 5.3
+                      operating-system: 'ubuntu-20.04'
+                      code-coverage: none
+                    - php: 5.4
+                      operating-system: 'ubuntu-20.04'
+                      code-coverage: none-
+                    - php: 5.5
+                      operating-system: 'ubuntu-20.04'
+                      code-coverage: none
                     - php: 5.6
                       operating-system: 'ubuntu-20.04'
                       code-coverage: none
@@ -31,7 +41,7 @@ jobs:
                       operating-system: 'ubuntu-20.04'
                       code-coverage: codecov
                     - php: 7.2
-                      operating-system: 'ubuntu-20.04'
+                      operating-system: 'ubuntu-22.04'
                       code-coverage: none
                     - php: 7.3
                       operating-system: 'ubuntu-22.04'
@@ -45,6 +55,9 @@ jobs:
                     - php: 8.1
                       operating-system: 'ubuntu-22.04'
                       code-coverage: none
+                    - php: 8.2
+                      operating-system: 'ubuntu-22.04'
+                      code-coverage: none
         steps:
 
             -   name: checkout code
@@ -53,39 +66,48 @@ jobs:
             # @todo stop any unused service and process to save ram/cpu: php-fpm (esp. if a != php version), docker,
             #       containerd, snapd, ModemManager?, pakagekit?, xsp4.exe
 
-            -   name: set up apache
-                run: |
-                    sudo apt-get update -qq
-                    chmod 755 ./tests/ci/setup/*.sh
-                    sudo ./tests/ci/setup/setup_apache.sh
+            #-   name: set up apache
+            #    run: |
+            #        sudo apt-get update -qq
+            #        chmod 755 ./tests/ci/setup/*.sh
+            #        sudo ./tests/ci/setup/setup_apache.sh
+
+            # @todo do we have to configure php-fpm? Maybe we are better off with setup_php than with shivammathur/setup-php...
 
             -   name: set up php
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php }}
-                    extensions: 'cli, dom, curl, fpm, mbstring, xdebug'
+                    extensions: 'dom, curl, mbstring, xdebug, xmlrpc'
                     ini-values: 'cgi.fix_pathinfo=1, always_populate_raw_post_data=-1'
                     coverage: ${{ matrix.code-coverage }}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            # @todo Build and enable the xmlrpc extension by hand if needed!
-
-            # @todo do we have to configure php-fpm? Maybe we are better off with setup_php than with shivammathur/setup-php...
+            # @todo make sure we always build and enable the xmlrpc extension, when not available via shivammathur
 
             # @todo add caching of composer dependencies
 
             -   name: install dependencies
                 run: composer install --no-progress --prefer-dist
 
-            -   name: test with phpunit
-                run: vendor/bin/phpunit -v tests
+            -   name: run tests with phpunit and upload code coverage if needed
+                run: |
+                    if [ "${{ matrix.code-coverage }}" != 'none' ]; then
+                        export PHPUNIT_OPTS="--coverage-clover=coverage.clover"
+                    fi
+                    vendor/bin/phpunit -v tests
+                    if [ "${{ matrix.code-coverage }}" != 'none' -a -f coverage.clove ]; then
+                        curl -Os https://uploader.codecov.io/latest/linux/codecov && \
+                        chmod +x codecov && \
+                        ./codecov -f coverage.clover
+                    fi
 
             -   name: troubleshoot
                 if: ${{ failure() }}
                 run: |
                     # Troubleshoot test env build problems
-                    ps auxwww
+                    #ps auxwww
                     #'sudo find /etc/php | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
                     php -i
                     #ls -la /run/php
@@ -94,6 +116,6 @@ jobs:
                     #'sudo find /etc/apache2 | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
 
                     # Show as much info as we can to help developers
-                    sudo cat /var/log/apache2/error.log
-                    sudo cat /var/log/apache2/other_vhosts_access.log
+                    #sudo cat /var/log/apache2/error.log
+                    #sudo cat /var/log/apache2/other_vhosts_access.log
                     sudo cat /var/log/php*.log
