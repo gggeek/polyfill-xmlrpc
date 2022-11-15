@@ -6,16 +6,16 @@ jobs:
     test:
         runs-on: ${{ matrix.operating-system }}
         env:
-            - HTTPSERVER: localhost
-            - URI: /tests/server.php
-            - HTTPSSERVER: localhost
-            - HTTPSURI: /tests/server.php
+            HTTPSERVER: localhost
+            URI: /tests/server.php
+            HTTPSSERVER: localhost
+            HTTPSURI: /tests/server.php
             # @todo verify if we need this. Was: Travis currently compiles PHP with an oldish cURL/GnuTLS combination;
             # to make the tests pass when Apache has a bogus SSL cert whe need the full set of options below
-            - HTTPSVERIFYHOST: 0
-            - HTTPSIGNOREPEER: 1
-            - SSLVERSION: 0
-            - DEBUG: 0
+            HTTPSVERIFYHOST: 0
+            HTTPSIGNOREPEER: 1
+            SSLVERSION: 0
+            DEBUG: 0
         strategy:
             fail-fast: false
             matrix:
