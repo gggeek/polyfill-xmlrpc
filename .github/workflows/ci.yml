@@ -22,15 +22,16 @@ jobs:
             matrix:
                 # @see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners for available os versions
                 include:
-                    - php: 5.3
-                      operating-system: 'ubuntu-22.04'
-                      code-coverage: none
-                    - php: 5.4
-                      operating-system: 'ubuntu-22.04'
-                      code-coverage: none-
-                    - php: 5.5
-                      operating-system: 'ubuntu-22.04'
-                      code-coverage: none
+                    # These 3 php versions seem to be unsupported on either Ubuntu 20 or 22
+                    #- php: 5.3
+                    #  operating-system: 'ubuntu-20.04'
+                    #  code-coverage: none
+                    #- php: 5.4
+                    #  operating-system: 'ubuntu-20.04'
+                    #  code-coverage: none-
+                    #- php: 5.5
+                    #  operating-system: 'ubuntu-20.04'
+                    #  code-coverage: none
                     - php: 5.6
                       operating-system: 'ubuntu-20.04'
                       code-coverage: none
@@ -95,10 +96,11 @@ jobs:
             -   name: run tests with phpunit and upload code coverage if needed
                 run: |
                     if [ "${{ matrix.code-coverage }}" != 'none' ]; then
-                        export PHPUNIT_OPTS="--coverage-clover=coverage.clover"
+                        vendor/bin/phpunit -v --coverage-clover=coverage.clover tests
+                    else
+                        vendor/bin/phpunit -v tests
                     fi
-                    vendor/bin/phpunit -v tests
-                    if [ "${{ matrix.code-coverage }}" != 'none' -a -f coverage.clove ]; then
+                    if [ -f coverage.clover ]; then
                         curl -Os https://uploader.codecov.io/latest/linux/codecov && \
                         chmod +x codecov && \
                         ./codecov -f coverage.clover
