@@ -1,3 +1,8 @@
+## vXXX (unreleased)
+
+- Improved: moved CI testing from Travis to GitHub Actions. Added testing on php 8.1 and 8.2
+
+
 ## v1.0-RC1 (2022/1/30)
 
 - Improved: servers now support answering calls to the `system.describeMethods` introspection method
