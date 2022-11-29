@@ -22,7 +22,7 @@ jobs:
             matrix:
                 # @see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners for available os versions
                 include:
-                    # These 3 php versions seem to be unsupported on either Ubuntu 20 or 22
+                    # These 3 php versions should be supported on either Ubuntu 20 or 22, but we need a lower phpunit version in composer.json
                     #- php: 5.3
                     #  operating-system: 'ubuntu-20.04'
                     #  code-coverage: none
@@ -62,7 +62,7 @@ jobs:
         steps:
 
             -   name: checkout code
-                uses: actions/checkout@v2
+                uses: actions/checkout@v3
 
             # @todo stop any unused service and process to save ram/cpu: php-fpm (esp. if a != php version), docker,
             #       containerd, snapd, ModemManager?, pakagekit?, xsp4.exe
