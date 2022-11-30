@@ -19,7 +19,14 @@ configure_php_ini() {
 
 # install php
 PHP_VERSION="$1"
-DEBIAN_VERSION="$(lsb_release -s -c)"
+# `lsb-release` is not necessarily onboard. We parse /etc/os-release instead
+DEBIAN_VERSION=$(cat /etc/os-release | grep 'VERSION_CODENAME=' | sed 's/VERSION_CODENAME=//')
+if [ -z "${DEBIAN_VERSION}" ]; then
+    # Example strings:
+    # VERSION="14.04.6 LTS, Trusty Tahr"
+    # VERSION="8 (jessie)"
+    DEBIAN_VERSION=$(cat /etc/os-release | grep 'VERSION=' | grep 'VERSION=' | sed 's/VERSION=//' | sed 's/"[0-9.]\+ *(\?//' | sed 's/)\?"//' | tr '[:upper:]' '[:lower:]' | sed 's/lts, *//' | sed 's/ \+tahr//')
+fi
 
 if [ "${PHP_VERSION}" = default ]; then
     if [ "${DEBIAN_VERSION}" = jessie -o "${DEBIAN_VERSION}" = precise -o "${DEBIAN_VERSION}" = trusty ]; then
