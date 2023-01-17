@@ -2,8 +2,6 @@
 
 # Has to be run as admin
 
-# To be kept in sync with setup_php_travis.sh
-
 # @todo make it optional to disable xdebug ?
 
 set -e
