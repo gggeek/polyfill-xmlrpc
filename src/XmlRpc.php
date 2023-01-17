@@ -95,6 +95,7 @@ final class XmlRpc
 
         $options = array('extension_api');
         if (strtoupper($encoding) != 'UTF-8') {
+            // NB: always set xmlrpc_internalencoding = 'UTF-8' when setting 'extension_api_encoding'
             $options['extension_api_encoding'] = $encoding;
         }
 
@@ -140,6 +141,7 @@ final class XmlRpc
 
         $options = array('extension_api');
         if (strtoupper($encoding) != 'UTF-8') {
+            // NB: always set xmlrpc_internalencoding = 'UTF-8' when setting 'extension_api_encoding'
             $options['extension_api_encoding'] = $encoding;
         }
 
@@ -506,6 +508,7 @@ final class XmlRpc
     protected static function fromUtf8($to, $str)
     {
         if (strtoupper($to) != 'UTF-8') {
+            /// @todo support mbstring as an alternative, as well as plain utf8_decode if none are available and target is latin-1
             $dstr = @iconv('UTF-8', $to, $str);
             if ($dstr !== false) {
                 return $dstr;
