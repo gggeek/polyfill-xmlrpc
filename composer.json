@@ -18,7 +18,7 @@
     },
     "require-dev": {
         "ext-curl": "*",
-        "phpunit/phpunit": "^5.0 || ^8.5.12",
+        "phpunit/phpunit": "^4.8 || ^5.0 || ^8.5.12",
         "phpunit/phpunit-selenium": "*",
         "yoast/phpunit-polyfills": "*"
     },

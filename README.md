@@ -13,10 +13,10 @@ Known differences from the original extension
 This library is not complete yet, and thus to be considered a Work in Progress.
 
 Main features missing are:
-- character set handling: at the moment only utf-8 and iso-8859-1 are supported; iso-8859-1 as default, and utf8 via:
+- character set handling: at the moment only utf-8 and iso-8859-1 are supported; iso-8859-1 as default, and utf-8 via:
   - using the `$encoding` argument to `xmlrpc_decode()` and `xmlrpc_decode_request()`
   - setting `'encoding' => 'UTF-8'` and `'escaping' => 'markup'` in the `$options` argument to `xmlrpc_encode_request`
-- the `xmlrpc_parse_method_descriptions` and `xmlrpc_server_register_introspection_callback` functions exist but do nothing
+- the `xmlrpc_parse_method_descriptions` function exists but does nothing
 - the `xmlrpc_encode_request` function has partial support for the `$options` argument
 
 For a detailed list of all known differences compared to the behaviour of the PHP extension, see comments at the top of
@@ -56,7 +56,7 @@ The full sequence of operations is:
     # and, once you have finished all testing related work:
     ./tests/ci/vm.sh cleanup
 
-By default tests are run using php 7.0 in a Container based on Ubuntu 16 Xenial.
+By default, tests are run using php 7.4 in a Container based on Ubuntu 20 Focal.
 You can change the version of PHP and Ubuntu in use by setting the environment variables PHP_VERSION and UBUNTU_VERSION
 before building the Container.
 

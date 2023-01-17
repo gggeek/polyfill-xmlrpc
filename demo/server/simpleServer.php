@@ -66,7 +66,7 @@ xmlrpc_server_destroy($server);
 
 if ($response) {
     // NB: unless we pass the 'encoding' => 'utf-8' output option to the server, there will be a Latin-1 declaration in the generated xml,
-    //     in which case we should force the charset in the content-type header to avoid php overriding it and declaring UTF-8, as
+    //     in which case we should force the charset in the content-type header to avoid php overriding it and declaring UTF-8
     header('Content-Type: text/xml;charset=iso-8859-1');
     echo $response;
 } else {

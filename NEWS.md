@@ -1,7 +1,7 @@
 ## vXXX (unreleased)
 
-- Improved: moved CI testing from Travis to GitHub Actions. Added testing on php 8.1 and 8.2
-
+- Improved: moved CI testing from Travis to GitHub Actions. Added testing on php 8.1 and 8.2. Default the local testing
+  container to using PHP 7.4 on Ubuntu Focal
 
 ## v1.0-RC1 (2022/1/30)
 
