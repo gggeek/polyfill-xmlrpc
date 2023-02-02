@@ -163,7 +163,7 @@ class Server extends BaseServer
     }
 
     /**
-     * Note: we _could_ improve this, however the xmlrpc extension has apparently bug, which prevents it from listing
+     * Note: we _could_ improve this, however the xmlrpc extension has apparently a bug, which prevents it from listing
      * _any_ registered method when answering to these calls. So it's just not worth it...
      * @param Server $server
      * @param \PhpXmlRpc\Request|string|string[]|null $req
