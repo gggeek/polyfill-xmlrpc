@@ -344,9 +344,8 @@ final class XmlRpc
                 return $ok ? Value::$xmlrpcArray : Value::$xmlrpcStruct;
             case 'object':
                 if ($value instanceof Value) {
-                    reset($value->me);
-                    $type = key($value->me);
-                    return str_replace(array('i4', 'dateTime.iso8601'), array('int', 'datetime'), $type);
+                    $type = $value->scalarTyp();
+                    return str_replace('dateTime.iso8601', 'datetime', $type);
                 } elseif ($value instanceof \stdClass && isset($value->xmlrpc_type)) {
                     switch($value->xmlrpc_type) {
                         case 'datetime':
