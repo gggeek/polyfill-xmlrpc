@@ -106,8 +106,9 @@ jobs:
                         ./codecov -f coverage.clover
                     fi
 
+            # NB: the current phpunit dependencies break with --prefer-lowest and php >= 7.1. We only lower phpxmlrpc
             -   name: reset dependencies to the lowest version
-                run: 'composer update --prefer-lowest'
+                run: 'composer update --prefer-lowest phpxmlrpc/phpxmlrpc'
 
             -   name: run tests again
                 run: ./vendor/bin/phpunit -v tests
