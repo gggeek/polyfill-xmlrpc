@@ -106,6 +106,12 @@ jobs:
                         ./codecov -f coverage.clover
                     fi
 
+            -   name: reset dependencies to the lowest version
+                run: 'composer update --prefer-lowest'
+
+            -   name: run tests again
+                run: ./vendor/bin/phpunit -v tests
+
             -   name: troubleshoot
                 if: ${{ failure() }}
                 run: |
