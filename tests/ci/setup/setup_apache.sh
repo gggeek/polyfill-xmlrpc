@@ -2,7 +2,9 @@
 
 # Install and configure apache2
 # Has to be run as admin
-# @todo make this work across all apache versions (precise to focal)
+# @todo make this work across all ubuntu versions (precise to jammy)
+
+echo "Installing and configuring Apache2..."
 
 set -e
 
@@ -22,3 +24,5 @@ echo "export TESTS_ROOT_DIR=/var/www/html" >> /etc/apache2/envvars
 echo "export HTTPSERVER=localhost" >> /etc/apache2/envvars
 
 service apache2 restart
+
+echo "Done Installing and configuring Apache2"
