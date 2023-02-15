@@ -46,6 +46,24 @@ Environment variables: to be set before the 'build' action
 "
 }
 
+wait_for_bootstrap() {
+    I=0
+    while [ $I -le 60 ]; do
+        if [ -f "${ROOT_DIR}/tests/ci/var/bootstrap_ok" ]; then
+            echo ''
+            break;
+        fi
+        printf '.'
+        sleep 1
+        I=$((I+1))
+    done
+    if [ $I -eq 60 ]; then
+        echo "ERROR: Container did not finish bootstrapping within 60 seconds..." >&2
+        return 1
+    fi
+    return 0
+}
+
 build() {
     stop
     docker build --build-arg PHP_VERSION --build-arg UBUNTU_VERSION -t "${IMAGE_NAME}" .
@@ -59,20 +77,21 @@ build() {
         --env TESTS_ROOT_DIR=${CONTAINER_WORKSPACE_DIR} \
         --env HTTPSERVER=localhost \
         --env HTTPURI=/demo/server/server.php \
-        --env HTTPSSERVER=localhost \
-        --env HTTPSURI=/demo/server/server.php \
-        --env PROXYSERVER=localhost:8080 \
-        --env HTTPSVERIFYHOST=0 \
-        --env HTTPSIGNOREPEER=1 \
-        --env SSLVERSION=0 \
         --env DEBUG=0 \
         -v "${ROOT_DIR}":"${CONTAINER_WORKSPACE_DIR}" \
          "${IMAGE_NAME}"
+
+    if [ $? -eq 0 ]; then
+        wait_for_bootstrap
+    fi
 }
 
 start() {
     if docker inspect "${CONTAINER_NAME}" >/dev/null 2>/dev/null; then
         docker start "${CONTAINER_NAME}"
+        if [ $? -eq 0 ]; then
+            wait_for_bootstrap
+        fi
     else
         build
     fi
