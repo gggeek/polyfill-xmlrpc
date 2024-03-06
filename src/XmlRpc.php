@@ -83,7 +83,9 @@ final class XmlRpc
     public static function xmlrpc_decode($xml, $encoding = "iso-8859-1")
     {
         $encoder = new Encoder();
-        if (strpos($xml, '<methodResponse>') === false) {
+        if (strpos($xml, '<methodResponse>') === false
+          && strpos($xml, '<methodCall>') === false
+        ) {
             // strip out unnecessary xml in case we're deserializing a single param.
             // in case of a complete response, we do not have to strip anything
             // please note that the test below has LARGE space for improvement (eg. it might trip on xml comments...)
