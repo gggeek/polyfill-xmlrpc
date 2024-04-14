@@ -52,6 +52,9 @@ jobs:
                     - php: 8.2
                       operating-system: 'ubuntu-22.04'
                       code-coverage: none
+                    - php: 8.3
+                      operating-system: 'ubuntu-22.04'
+                      code-coverage: none
         steps:
 
             -   name: checkout code
