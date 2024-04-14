@@ -1,7 +1,12 @@
 ## vXXX (unreleased)
 
-- Improved: moved CI testing from Travis to GitHub Actions. Added testing on php 8.1 and 8.2. Default the local testing
-  container to using PHP 7.4 on Ubuntu Focal
+- Improved: fixed many corner cases for function `xmlrpc_decode`
+
+- Improved: moved CI testing from Travis to GitHub Actions. Added testing on php 8.1, 8.2 and 8.3. Default the local
+  testing container to using PHP 7.4 on Ubuntu Focal
+
+- Changed: bumped requirements to php 5.4, phpxmlrpc 4.10
+
 
 ## v1.0-RC1 (2022/1/30)
 

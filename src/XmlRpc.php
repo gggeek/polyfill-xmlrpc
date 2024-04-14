@@ -79,17 +79,22 @@ final class XmlRpc
      *                         characters which can not be represented in the target encoding, the returned data will
      *                         be in utf8
      * @return mixed
+     * @bug known case not to work atm: '<params><param><value><string>Hello</string></value></param><param><value><string>Dolly</string></value></param></params>'
      */
     public static function xmlrpc_decode($xml, $encoding = "iso-8859-1")
     {
         $encoder = new Encoder();
-        if (strpos($xml, '<methodResponse>') === false
-          && strpos($xml, '<methodCall>') === false
-        ) {
-            // strip out unnecessary xml in case we're deserializing a single param.
-            // in case of a complete response, we do not have to strip anything
-            // please note that the test below has LARGE space for improvement (eg. it might trip on xml comments...)
+        // Strip out unnecessary xml in case we're deserializing a single param.
+        // In case of a complete response, we do not have to strip anything.
+        // Please note that the test below has LARGE space for improvement (eg. it does not work for an xml chunk
+        // with 2 or more params. Also, it might trip on xml comments...)
+        $xmlDeclRegex = '<\?xml\s+version\s*=\s*["\']1\.[0-9]+["\'](?:\s+encoding=["\'][A-Za-z](?:[A-Za-z0-9._]|-)*["\'])?\s*\?>';
+        if (preg_match('/^(' . $xmlDeclRegex . ')?\s*<params>/', $xml)) {
             $xml = preg_replace(array('!\s*<params>\s*<param>\s*!', '!\s*</param>\s*</params>\s*$!'), array('', ''), $xml);
+        } elseif (preg_match('/^(' . $xmlDeclRegex . ')?\s*<param>/', $xml)) {
+            $xml = preg_replace(array('!\s*<param>\s*!', '!\s*</param>\s*$!'), array('', ''), $xml);
+        } elseif (preg_match('#^(' . $xmlDeclRegex . ')?\s*(<(?:int|i4|boolean|string|double|dateTime.iso8601|struct|array)>.+</(?:int|i4|boolean|string|double|dateTime.iso8601|struct|array)>)$#', $xml, $matches)) {
+            $xml = $matches[1] . '<value>' . $matches[2] . '</value>';
         }
 
         $defaultEncoding = PhpXmlRpc::$xmlrpc_internalencoding;
@@ -461,7 +466,7 @@ final class XmlRpc
     public static function xmlrpc_server_register_method($server, $method_name, $function)
     {
         if ($server instanceof BaseServer) {
-            $server->add_to_map($method_name, $function);
+            $server->addToMap($method_name, $function);
             return true;
         }
         return false;
