@@ -41,8 +41,10 @@
  *     the extension (wrong character entities are generated). It works with us
  * - differences in parsing xml
  *   - some invalid requests / responses will not be accepted that the native extension allows through:
- *     - missing 'param' inside 'params'
+ *     - missing '<param>' inside '<params>'
  *       eg. <methodCall><methodName>hey</methodName><params><value><string>hey</string></value></params></methodCall>
+ *     - missing '<params>' altogether inside '<methodCall>'
+ *     - missing '<value>' inside '<param>'
  * - differences in the API:
  *   - arrays which look like an xmlrpc fault and are passed to xmlrpc_encode_request() will be encoded
  *     as structs (the extension generates an invalid xmlrpc request in this case)
