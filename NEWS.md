@@ -1,4 +1,4 @@
-## vXXX (unreleased)
+## v1.0 (2024/4/15)
 
 - Improved: fixed many corner cases for function `xmlrpc_decode`
 
