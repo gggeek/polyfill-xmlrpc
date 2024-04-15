@@ -14,7 +14,7 @@
     },
     "require": {
         "php": "^5.4.0 || ^7.0 || ^8.0",
-        "phpxmlrpc/phpxmlrpc": "^4.10.0"
+        "phpxmlrpc/phpxmlrpc": "^4.10.2"
     },
     "require-dev": {
         "ext-curl": "*",

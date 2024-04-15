@@ -106,6 +106,23 @@ class ApiTest extends TestCase
     }
 
     /**
+     * @dataProvider getXMLDecodingValues
+     */
+    public function testXMLDecoding($text)
+    {
+        static $z;
+
+        $ok = xmlrpc_decode($text);
+        $ok1 = p::xmlrpc_decode($text);
+
+        if ($ok != $ok1) {
+            echo $z++ . "$text\n\n";
+        }
+
+        $this->assertEquals($ok, $ok1, "xmlrpc_decode result not compliant");
+    }
+
+    /**
      * @dataProvider getEncodeRequestValues
      */
     function testEncodeRequest($value, $options)
@@ -478,6 +495,43 @@ class ApiTest extends TestCase
 // breaks encode, encode_request
 //            array((object)array('xmlrpc_type' => 'base64', 'scalar' => null)),
         );
+
+        return $values;
+    }
+
+    public function getXMLDecodingValues()
+    {
+        $partialValues = array(
+            array('Hello Dolly'),
+            array('<string>Hello Dolly</string>'),
+            array('<value><string>Hello Dolly</string></value>'),
+            array('<param><value><string>Hello Dolly</string></value></param>'),
+            array('<params><param><value><string>Hello Dolly</string></value></param></params>'),
+//            array('<params><param><value><string>Hello</string></value></param><param><value><string>Dolly</string></value></param></params>'),  // KO
+            array('<methodName>Hello.Dolly</methodName>'),
+            //array('<methodCall><methodName>Hello.Dolly</methodName></methodCall>'), // KO - but invalid xmlrpc anyway
+            array('<methodCall><methodName>Hello.Dolly</methodName><params></params></methodCall>'),
+            //array('<methodCall><methodName>Hello.Dolly</methodName><params><param></param></params></methodCall>'), // KO - but invalid xmlrpc anyway
+            array('<methodCall><methodName>Hello.Dolly</methodName><params><param><value></value></param></params></methodCall>'),
+            array('<methodCall><methodName>Hello.Dolly</methodName><params><param><value><string>Hello Dolly</string></value></param></params></methodCall>'),
+            array('<methodResponse></methodResponse>'),
+            array('<methodResponse><params></params></methodResponse>'),
+            array('<methodResponse><params><param></param></params></methodResponse>'),
+            array('<methodResponse><params><param><value></value></param></params></methodResponse>'),
+            array('<methodResponse><params><param><value><string>Hello Dolly</string></value></param></params></methodResponse>'),
+            array('<struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct>'),
+            array('<value><struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct></value>'),
+            array('<param><value><struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct></value></param>'),
+            array('<params><param><value><struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct></value></param></params>'),
+            array('<fault><value><struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct></value></fault>'),
+            array('<methodResponse><fault><value><struct><member><name>faultCode</name><value><int>4</int></value></member><member><name>faultString</name><value><string>Too many parameters.</string></value></member></struct></value></fault></methodResponse>'),
+        );
+
+        $values = $partialValues;
+        array_shift($partialValues);
+        foreach ($partialValues as $item) {
+            $values[] = array('<?xml version="1.0" ?>' . $item[0]);
+        }
 
         return $values;
     }
