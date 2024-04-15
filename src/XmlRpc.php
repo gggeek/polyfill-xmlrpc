@@ -90,7 +90,9 @@ final class XmlRpc
         // In case of a complete response, we do not have to strip anything.
         // Please note that the test below has LARGE space for improvement (eg. it does not work for an xml chunk
         // with 2 or more params. Also, it might trip on xml comments...)
-        $xmlDeclRegex = '<\?xml\s+version\s*=\s*["\']1\.[0-9]+["\'](?:\s+encoding=["\'][A-Za-z](?:[A-Za-z0-9._]|-)*["\'])?\s*\?>';
+        /// @todo this regexp will fail if $xmlChunk uses UTF-32/UCS-4, and most likely UTF-16/UCS-2 as well.
+        ///       Also, it should be expanded to support the optional Standalone Document Declaration
+        $xmlDeclRegex = '<\?xml\s+version\s*=\s*["\']1\.[0-9]+["\'](?:\s+encoding\s*=\s*["\'][A-Za-z](?:[A-Za-z0-9._-])*["\'])?\s*\?>';
         if (preg_match('/^(' . $xmlDeclRegex . ')?\s*<params>/', $xml)) {
             $xml = preg_replace(array('!\s*<params>\s*<param>\s*!', '!\s*</param>\s*</params>\s*$!'), array('', ''), $xml);
         } elseif (preg_match('/^(' . $xmlDeclRegex . ')?\s*<param>/', $xml)) {
