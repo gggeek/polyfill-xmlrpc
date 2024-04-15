@@ -15,10 +15,7 @@ jobs:
             matrix:
                 # @see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners for available os versions
                 include:
-                    # These 3 php versions should be supported on either Ubuntu 20 or 22, but we need a lower phpunit version in composer.json
-                    #- php: 5.3
-                    #  operating-system: 'ubuntu-20.04'
-                    #  code-coverage: none
+                    # These 2 php versions should be supported on either Ubuntu 20 or 22, but we need a lower phpunit version in composer.json
                     #- php: 5.4
                     #  operating-system: 'ubuntu-20.04'
                     #  code-coverage: none-
