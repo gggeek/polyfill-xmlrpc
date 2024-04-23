@@ -5,10 +5,20 @@ A pure-php reimplementation of the API exposed by the native XML-RPC extension.
 
 Originally bundled as part of the [phpxmlrpc/extras](https://github.com/gggeek/phpxmlrpc-extras) package.
 
+Requirements
+------------
+
+Any PHP version from 5.4 to 8.3 is supported.
+The `phpxmlrpc/phpxmlrpc` library is used as the underlying XML-RPC engine. It will get automatically pulled in for you
+when you install via Composer.
+
 Installation and usage
 ----------------------
 
-The recommended way to install this library is via usage of Composer: just add `"phpxmlrpc/polyfill-xmlrpc": "^1.0.0"`
+Installation: the recommended way to install this library is via usage of Composer. Just add
+
+    "phpxmlrpc/polyfill-xmlrpc": "^1.0.0"
+
 to your Composer "require" section.
 
 Usage: once your autoload configuration is set up properly (which is normally taken care for you by Composer), you
@@ -21,8 +31,9 @@ Known differences from the original extension
 
 This library is not _fully_ complete yet, but it should be good enough for most users.
 
-Main features missing are:
-- character set handling: at the moment only utf-8 and iso-8859-1 are supported; iso-8859-1 as default, and utf-8 via:
+The main features missing are:
+- character set handling: at the moment only utf-8 and iso-8859-1 charset encodings are supported; iso-8859-1 as default,
+  and utf-8 via:
   - using the `$encoding` argument to `xmlrpc_decode()` and `xmlrpc_decode_request()`
   - setting `'encoding' => 'UTF-8'` and `'escaping' => 'markup'` in the `$options` argument to `xmlrpc_encode_request`
 - the `xmlrpc_parse_method_descriptions` and `xmlrpc_server_register_introspection_callback` functions exist but do nothing
