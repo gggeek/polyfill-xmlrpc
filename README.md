@@ -5,12 +5,21 @@ A pure-php reimplementation of the API exposed by the native XML-RPC extension.
 
 Originally bundled as part of the [phpxmlrpc/extras](https://github.com/gggeek/phpxmlrpc-extras) package.
 
+Installation and usage
+----------------------
+
+The recommended way to install this library is via usage of Composer: just add `"phpxmlrpc/polyfill-xmlrpc": "^1.0.0"`
+to your Composer "require" section.
+
+Usage: once your autoload configuration is set up properly (which is normally taken care for you by Composer), you
+can just use in your code all the functions described at https://www.php.net/manual/en/ref.xmlrpc.php
+
 Known differences from the original extension
 ---------------------------------------------
 
 ### Work in Progress!
 
-This library is not complete yet, and thus to be considered a Work in Progress.
+This library is not _fully_ complete yet, but it should be good enough for most users.
 
 Main features missing are:
 - character set handling: at the moment only utf-8 and iso-8859-1 are supported; iso-8859-1 as default, and utf-8 via:
@@ -32,13 +41,8 @@ This means that the following are _not_ goals of this package:
   Eg. whitespace and element indentation in the produced xml strings do differ
 
 - reproducing behaviour of the native extension which is clearly buggy
-  Eg. the native extension will produce invalid xmlrpc requests when specific values are passed to an
+  Eg. the native extension will produce invalid xmlrpc requests when some specific values are passed to an
   `xmlrpc_encode_request` call
-
-Installation and usage
-----------------------
-
-The recommended way to install this library is via usage of Composer.
 
 Running tests
 -------------
