@@ -1,6 +1,10 @@
 /.idea
 /vendor/*
 /.phpunit.result.cache
+/demo/client/ripcord/composer.lock
+/demo/client/ripcord/vendor/
+/demo/server/ripcord/composer.lock
+/demo/server/ripcord/vendor/
 /composer.lock
 /phpunit.xml
 /tests/ci/var/*

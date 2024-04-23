@@ -1,0 +1,6 @@
+{
+    "require": {
+        "phpxmlrpc/polyfill-xmlrpc": "^1.0",
+        "darkaonline/ripcord": "^0.2.0"
+    }
+}
