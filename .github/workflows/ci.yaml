@@ -38,7 +38,7 @@ jobs:
                       operating-system: 'ubuntu-22.04'
                       code-coverage: none
                     - php: 7.4
-                      operating-system: 'ubuntu-22.04'
+                      operating-system: 'ubuntu-24.04'
                       code-coverage: xdebug
                     - php: 8.0
                       operating-system: 'ubuntu-22.04'
@@ -51,6 +51,9 @@ jobs:
                       code-coverage: none
                     - php: 8.3
                       operating-system: 'ubuntu-22.04'
+                      code-coverage: none
+                    - php: 8.4
+                      operating-system: 'ubuntu-24.04'
                       code-coverage: none
         steps:
 
@@ -101,7 +104,13 @@ jobs:
 
             # NB: the current phpunit dependencies break with --prefer-lowest and php >= 7.1. We only lower phpxmlrpc
             -   name: reset dependencies to the lowest version
-                run: 'composer update --prefer-lowest phpxmlrpc/phpxmlrpc'
+                run: |
+                    if [  "${{ matrix.php }}" = '8.4' ]; then
+                        # versions 4.10.1 to 4.10.4 are buggy with php 8.4, even though they do not declare it,
+                        # so we hack around that
+                        sed -e 's?"phpxmlrpc/phpxmlrpc": "^4\.10\..*?"phpxmlrpc/phpxmlrpc": "^4.11.0"?g' --in-place composer.json
+                    fi
+                    composer update --prefer-lowest phpxmlrpc/phpxmlrpc
 
             -   name: run tests again
                 run: ./vendor/bin/phpunit -v tests
