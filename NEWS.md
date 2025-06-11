@@ -1,3 +1,8 @@
+## vXX (unreleased)
+
+- Improved: added CI testing on php 8.4. Default the local testing container to using PHP 8.1 on Ubuntu Jammy
+
+
 ## v1.0 (2024/4/15)
 
 - Improved: fixed many corner cases for function `xmlrpc_decode`
