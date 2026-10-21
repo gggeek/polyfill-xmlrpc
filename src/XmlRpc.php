@@ -310,7 +310,7 @@ final class XmlRpc
         } else {
             // create response
             if (is_array($params) && self::xmlrpc_is_fault($params))
-                $resp = new Response(0, (integer)$params['faultCode'], (string)$params['faultString']);
+                $resp = new Response(0, (int)$params['faultCode'], (string)$params['faultString']);
             else
                 $resp = new Response($encoder->encode($params, $output_options));
             $out = "<?xml version=\"1.0\" encoding=\"$targetEncoding\"?" . ">\n" . $resp->serialize($targetCharset);
