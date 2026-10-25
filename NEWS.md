@@ -1,3 +1,8 @@
+## v1.xxx (unreleased)
+
+- Improved: added CI testing on php 8.5.
+
+
 ## v1.0.1 (2026/10/25)
 
 - Fixed: removed one warning on PHP 8.5. Thanks to hubipe.
