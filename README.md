@@ -17,7 +17,7 @@ Installation and usage
 
 Installation: the recommended way to install this library is via usage of Composer. Just add
 
-    "phpxmlrpc/polyfill-xmlrpc": "^1.0.0"
+    "phpxmlrpc/polyfill-xmlrpc": "^1.0.1"
 
 to your Composer "require" section.
 

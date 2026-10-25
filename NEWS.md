@@ -1,4 +1,6 @@
-## vXX (unreleased)
+## v1.0.1 (2026/10/25)
+
+- Fixed: removed one warning on PHP 8.5. Thanks to hubipe.
 
 - Improved: added CI testing on php 8.4. Default the local testing container to using PHP 8.1 on Ubuntu Jammy
 
